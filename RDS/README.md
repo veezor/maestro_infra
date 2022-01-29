@@ -1,0 +1,1 @@
+cdk deploy -c 'PROJECT_OWNER=veezor' -c 'REPOSITORY_NAME=wordpress' -c 'BRANCH=staging' -c 'VPC_ID=vpc-00c0a6bcefbe739e9' -c 'TEST=true' -c 'DATABASE_ENGINE=mysql'
