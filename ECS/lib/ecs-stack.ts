@@ -255,9 +255,9 @@ export class EcsStack extends Stack {
       ]
     });
 
-    const executionRole = new iam.Role(this, `CreateExecutionRole-${branch}`, {
+    const executionRole = new iam.Role(this, `CreateExecutionRole-${repositoryName}-${branch}`, {
       assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
-      roleName: `ecsTaskExecutionRole-${branch}`,
+      roleName: `ecsTaskExecutionRole-${repositoryName}-${branch}`,
       managedPolicies: [
         executionRolePolicies
       ]
