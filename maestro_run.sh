@@ -23,20 +23,20 @@ re_cidr="^([0-9]{1,3}\.){3}[0-9]{1,3}($|/(16|24))$"
 
 #echo Installing NPM dependencies in all projects...
 cd VPC
-#npm install
+npm install
 cd ../codebuild
-#npm install
+npm install
 cd ../ECS
-#npm install
+npm install
 cd ../RDS
-#npm install
+npm install
 cd ..
 echo All NPM dependencies installed.
 
 test=$(cat env.json | jq -r '.test')
 secrets=$(cat env.json | jq -r '.secrets')
 repository_url=$(cat env.json | jq -r '.repository.url')
-repository_branch=$(cat env.json | jq -r ';repository.branch')
+repository_branch=$(cat env.json | jq -r '.repository.branch')
 vpc_cidr=$(cat env.json | jq -r '.vpc.cidr')
 vpc_id=$(cat env.json | jq -r '.vpc.id')
 vpc_name=$(cat env.json | jq -r '.vpc.name')
