@@ -1,6 +1,4 @@
 #!/bin/bash
-set -x
-set -e
 
 source ./functions.sh
 
