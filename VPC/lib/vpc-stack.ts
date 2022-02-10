@@ -1,7 +1,7 @@
 import {
+  Tags,
   Stack,
   StackProps,
-  CfnParameter,
   RemovalPolicy,
   CfnOutput,
   aws_ec2 as ec2,
@@ -14,20 +14,14 @@ export class VpcStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const vpcName = this.node.tryGetContext('VPC_NAME').toLowerCase();
     const test = this.node.tryGetContext('TEST');
+    const vpcName = this.node.tryGetContext('VPC_NAME').toLowerCase();
+    const projectTags = this.node.tryGetContext('TAGS');
 
-    // const vpcName = new CfnParameter(this, "vpcName", {
-    //   type: "String",
-    //   description: "The name of the VPC.",
-    // }).valueAsString;
-    
-    // const test = new CfnParameter(this, "test", {
-    //   type: "String",
-    //   description: "The test flag does not can be used on production stage."
-    // }).valueAsString;
-
-    console.log((test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN);
+    for (let i = 0; i < projectTags.length; i++) {
+      let element = projectTags[i];
+      Tags.of(this).add(element[0], element[1]);
+    }
 
     const vpc = new ec2.Vpc(this, `${vpcName}-vpc`, {
       cidr: this.node.tryGetContext('VPC_CIDR'),

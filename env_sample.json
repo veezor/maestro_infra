@@ -17,5 +17,9 @@
     "name": "veezor",
     "cidr": "10.0.0.0/16",
     "id": "vpc-a58dbcdd"
-  }
+  },
+  "tags": [
+    ["owner", "veeezor"],
+    ["environment", "staging"]
+  ]
 }

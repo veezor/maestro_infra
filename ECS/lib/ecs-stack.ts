@@ -13,11 +13,17 @@ export class EcsStack extends Stack {
     let projectSecrets = this.node.tryGetContext('PROJECT_SECRETS');
     let projectOwner = this.node.tryGetContext('PROJECT_OWNER').toLowerCase();
     let repositoryName = this.node.tryGetContext('REPOSITORY_NAME').toLowerCase();
+    const projectTags = this.node.tryGetContext('TAGS');
 
     let subnetsArns:any = [];
     
-    Tags.of(this).add('Project', `${repositoryName}`);
-    Tags.of(this).add('Branch', `${branch}`);
+    Tags.of(this).add('Project', repositoryName);
+    Tags.of(this).add('Branch', branch);
+
+    for (let i = 0; i < projectTags.length; i++) {
+      let element = projectTags[i];
+      Tags.of(this).add(element[0], element[1]);
+    }
 
     const ecsLogGroup = new logs.LogGroup(this, `CreateCloudWatchEcsLogGroup-${branch}`, {
       logGroupName: `/ecs/${projectOwner}-${repositoryName}-${branch}-web`,

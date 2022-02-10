@@ -20,10 +20,16 @@ export class CodebuildStack extends Stack {
     const projectOwner = this.node.tryGetContext('PROJECT_OWNER').toLowerCase();
     const repositoryName = this.node.tryGetContext('REPOSITORY_NAME').toLowerCase();
     const gitService = this.node.tryGetContext('GIT_SERVICE').toLowerCase();
+    const projectTags = this.node.tryGetContext('TAGS');
     
     let subnetsArns:any = [];
     
     Tags.of(this).add('Project', repositoryName);
+
+    for (let i = 0; i < projectTags.length; i++) {
+      let element = projectTags[i];
+      Tags.of(this).add(element[0], element[1]);
+    }
     
     const codeBuildLogGroup = new logs.LogGroup(this, `CreateCloudWatchcodeBuildLogGroup`, {
       logGroupName: `/aws/codebuild/${projectOwner}-${repositoryName}-image-build`,

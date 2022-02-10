@@ -10,7 +10,13 @@ create_codebuild() {
   vpc_id=${vpc_id:-$vpc_id_env}
   
   cd codebuild
-  cdk deploy -c "TEST=$test" -c "VPC_ID=$vpc_id" -c "PROJECT_OWNER=$project_owner" -c "REPOSITORY_NAME=$repository_name" -c "GIT_SERVICE=$git_service" --profile $aws_profile
+  cdk deploy -c "TEST=$test" \
+    -c "VPC_ID=$vpc_id" \
+    -c "PROJECT_OWNER=$project_owner" \
+    -c "REPOSITORY_NAME=$repository_name" \
+    -c "GIT_SERVICE=$git_service" \
+    -c "TAGS=$tags"
+    --profile $aws_profile
   cd ..
 }
 
