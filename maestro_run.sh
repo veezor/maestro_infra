@@ -1,61 +1,66 @@
 #!/bin/bash
 
-create_vpc() {
-  cd VPC
-  cdk deploy -c "STACK_NAME=$project_owner" -c "VPC_CIDR=$vpc_cidr" -c "TEST=$test" -c "VPC_NAME=$vpc_name" --profile $aws_profile
-  cd ..
-}
+source ./functions.sh
 
-create_codebuild() {
-  cd codebuild
-  cdk deploy -c "TEST=$test" -c "VPC_ID=$vpc_id" -c "PROJECT_OWNER=$project_owner" -c "REPOSITORY_NAME=$repository_name" --profile $aws_profile
-  cd ..
-}
+PARAMS=""
 
-create_ecs() {
-  cd ECS
-  cdk deploy -c "PROJECT_OWNER=$project_owner" -c "REPOSITORY_NAME=$repository_name" -c "BRANCH=$repository_branch" -c "VPC_ID=$vpc_id" -c "PROJECT_SECRETS=$secrets" -c "TEST=$test" --profile $aws_profile
-  cd ..
-}
+while (( "$#" )); do
+  case "$1" in
+    -e|--env-file)
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        json_file="$2"
+        shift
+      else
+        echo "Error: Argument for $1 in missing" >&2
+        exit 1
+      fi
+      ;;
+    -p|--profile)
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        aws_profile="$2"
+        shift 2
+      else
+        echo "Error: Argument for $1 in missing" >&2
+        exit 1
+      fi
+      ;;
+    -*|--*=) # unsupported flags
+      echo "Error: Unsupported flag $1" >&2
+      exit 1
+      ;;
+    *) # preserve positional arguments
+      PARAMS="$PARAMS $1"
+      shift
+      ;;
+  esac
+done
 
-re_repository_url="^(https|git)(:\/\/|@)([^\/:]+)[\/:]([^\/:]+)\/(.+)(.git)*$"
+re_repository_url="(github|bitbucket)(.com|.org)[\/]([^\/]+)[\/]([^\/.]+)"
 re_cidr="^([0-9]{1,3}\.){3}[0-9]{1,3}($|/(16|24))$"
 
-#echo Installing NPM dependencies in all projects...
-cd VPC
-npm install
-cd ../codebuild
-npm install
-cd ../ECS
-npm install
-cd ../RDS
-npm install
-cd ..
-echo All NPM dependencies installed.
+update_code
+update_npm
 
-test=$(cat env.json | jq -r '.test')
-secrets=$(cat env.json | jq -r '.secrets')
-repository_url=$(cat env.json | jq -r '.repository.url')
-repository_branch=$(cat env.json | jq -r '.repository.branch')
-vpc_cidr=$(cat env.json | jq -r '.vpc.cidr')
-vpc_id=$(cat env.json | jq -r '.vpc.id')
-vpc_name=$(cat env.json | jq -r '.vpc.name')
-aws_profile=$(cat env.json | jq -r '.aws.profile')
+test=$(cat $json_file | jq -r '.test')
+secrets=$(cat $json_file | jq -r '.secrets')
+repository_url=$(cat $json_file | jq -r '.repository.url')
+repository_branch=$(cat $json_file | jq -r '.repository.branch')
+vpc_cidr=$(cat $json_file | jq -r '.vpc.cidr')
+vpc_id=$(cat $json_file | jq -r '.vpc.id')
+vpc_name=$(cat $json_file | jq -r '.vpc.name')
+# aws_profile=$(cat $json_file | jq -r '.aws.profile')
 
-if [[ $repository_url =~ $re_repository_url ]]; then    
-  protocol=${BASH_REMATCH[1]}
-  separator=${BASH_REMATCH[2]}
-  hostname=${BASH_REMATCH[3]}
-  project_owner=${BASH_REMATCH[4]}
-  repository_name=${BASH_REMATCH[5]}
+if [[ $repository_url =~ $re_repository_url ]]; then
+  git_service=${BASH_REMATCH[1]}
+  project_owner=${BASH_REMATCH[3]}
+  repository_name=${BASH_REMATCH[4]}
 else
-  echo "Repository not valid. Try again."
+  echo "Repository url not valid. Try again."
   exit 0
 fi
 
-
 PS3='Please enter your choice: '
-options=("VPC" "Codebuild" "ECS" "Codebuild_ECS" "ALL" "Quit")
+options=("VPC" "Codebuild" "ECS" "Quit")
 select opt in "${options[@]}"
 do
     case $opt in
@@ -65,14 +70,14 @@ do
             ;;
         "Codebuild")
             echo "Only Codebuild will be created"
-            crete_codebuild
+            create_codebuild
             ;;
         "ECS")
             echo "Only ECS will be created"
             create_ecs
             ;;
         "Codebuild_ECS")
-            echo "Codebuild and ECS will be created. (vpc.id needs to exist on env.json)"
+            echo "Codebuild and ECS will be created. (vpc.id needs to exist on $json_file)"
             create_codebuild
             create_ecs
             ;;
