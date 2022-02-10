@@ -14,11 +14,8 @@
     "branch": "staging"
   },
   "vpc": {
-    "vpc_name": "veezor",
+    "name": "veezor",
     "cidr": "10.0.0.0/16",
     "id": "vpc-a58dbcdd"
-  },
-  "aws": {
-    "profile": "buildpacks"
   }
 }

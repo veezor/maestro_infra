@@ -48,7 +48,6 @@ repository_branch=$(cat $json_file | jq -r '.repository.branch')
 vpc_cidr=$(cat $json_file | jq -r '.vpc.cidr')
 vpc_id=$(cat $json_file | jq -r '.vpc.id')
 vpc_name=$(cat $json_file | jq -r '.vpc.name')
-# aws_profile=$(cat $json_file | jq -r '.aws.profile')
 
 if [[ $repository_url =~ $re_repository_url ]]; then
   git_service=${BASH_REMATCH[1]}
@@ -65,19 +64,19 @@ select opt in "${options[@]}"
 do
     case $opt in
         "VPC")
-            echo "Only VPC will be created"
+            echo "VPC will be created"
             create_vpc
             ;;
         "Codebuild")
-            echo "Only Codebuild will be created"
+            echo "Codebuild will be created"
             create_codebuild
             ;;
         "ECS")
-            echo "Only ECS will be created"
+            echo "ECS will be created"
             create_ecs
             ;;
         "Codebuild_ECS")
-            echo "Codebuild and ECS will be created. (vpc.id needs to exist on $json_file)"
+            echo "Codebuild and ECS will be created"
             create_codebuild
             create_ecs
             ;;

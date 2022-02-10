@@ -5,12 +5,21 @@ create_vpc() {
 }
 
 create_codebuild() {
+  vpc_id_env=$(cat $json_file | jq -r '.vpc.id')
+  read -p "Enter VPC ID [$vpc_id_env]: " vpc_id
+  vpc_id=${vpc_id:-$vpc_id_env}
+  
   cd codebuild
   cdk deploy -c "TEST=$test" -c "VPC_ID=$vpc_id" -c "PROJECT_OWNER=$project_owner" -c "REPOSITORY_NAME=$repository_name" -c "GIT_SERVICE=$git_service" --profile $aws_profile
   cd ..
 }
 
 create_ecs() {
+  vpc_id_env=$(cat $json_file | jq -r '.vpc.id')
+  read -p "Enter VPC ID [$vpc_id_env]: " vpc_id
+  vpc_id=${vpc_id:-$vpc_id_env}
+
+  cd codebuild
   cd ECS
   cdk deploy -c "PROJECT_OWNER=$project_owner" -c "REPOSITORY_NAME=$repository_name" -c "BRANCH=$repository_branch" -c "VPC_ID=$vpc_id" -c "PROJECT_SECRETS=$secrets" -c "TEST=$test" --profile $aws_profile
   cd ..
