@@ -20,9 +20,11 @@ export class CodebuildStack extends Stack {
     const projectOwner = this.node.tryGetContext('PROJECT_OWNER').toLowerCase();
     const repositoryName = this.node.tryGetContext('REPOSITORY_NAME').toLowerCase();
     const gitService = this.node.tryGetContext('GIT_SERVICE').toLowerCase();
-    const projectTags = this.node.tryGetContext('TAGS');
-    
+    const projectTags = JSON.parse(this.node.tryGetContext('TAGS'));
+    const deployUserExist = this.node.tryGetContext('DEPLOY_USER_EXIST');
+
     let subnetsArns:any = [];
+    var iamDeployUser:iam.IUser;
     
     Tags.of(this).add('Project', repositoryName);
 
@@ -211,97 +213,101 @@ export class CodebuildStack extends Stack {
       }
     });
 
-    const iamDeployUser = new iam.User(this, `CreateBuildIAMUser`, {
-      userName: `${repositoryName}-build`,
-    });
-
-    iamDeployUser.applyRemovalPolicy((test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN);
-
-    iamDeployUser.attachInlinePolicy(
-      new iam.Policy(this, `appsManageS3MediaApi`, {
-        policyName: `apps-manage-s3-media-api`,
-        statements: [
-          new iam.PolicyStatement({
-            effect: iam.Effect.ALLOW,
-            actions: [
-              "s3:ListBucketMultipartUploads",
-              "ecr:GetDownloadUrlForLayer",
-              "s3:ListBucket",
-              "ecr:UploadLayerPart",
-              "s3:GetBucketAcl",
-              "ecr:ListImages",
-              "s3:GetBucketPolicy",
-              "s3:ListMultipartUploadParts",
-              "ecr:PutImage",
-              "s3:PutObject",
-              "s3:GetObjectAcl",
-              "s3:GetObject",
-              "iam:PassRole",
-              "secretsmanager:GetSecretValue",
-              "s3:AbortMultipartUpload",
-              "ecr:BatchGetImage",
-              "ecr:CompleteLayerUpload",
-              "ecr:DescribeRepositories",
-              "s3:DeleteObject",
-              "s3:GetBucketLocation",
-              "ecr:InitiateLayerUpload",
-              "s3:PutObjectAcl",
-              "ecr:BatchCheckLayerAvailability",
-              "ecr:GetRepositoryPolicy",
-              "s3:PutBucketPolicy"
-            ],
-            resources: [
-              `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*`,
-              `arn:aws:iam::${this.account}:role/*`,
-              `arn:aws:ecr:${this.region}:${this.account}:repository/*`
-            ]
-          }),
-          new iam.PolicyStatement({
-            effect: iam.Effect.ALLOW,
-            actions: [
-              "ecs:UpdateCluster",
-              "ecs:UpdateService",
-              "ses:*",
-              "logs:*",
-              "ecs:RegisterTaskDefinition",
-              "ecr:GetAuthorizationToken",
-              "ecs:DescribeServices",
-              "codebuild:*"
-            ],
-            resources: [
-              "*"
-            ]
-          })
-        ]
-      })
-    );
-
-    iamDeployUser.attachInlinePolicy(
-      new iam.Policy(this, `Secretmanager`, {
-        policyName: `ManageSecretsmanager`,
-        statements: [
-          new iam.PolicyStatement({
-            effect: iam.Effect.ALLOW,
-            actions: [
-              "secretsmanager:GetRandomPassword",
-              "secretsmanager:ListSecrets"
-            ],
-            resources: [
-              "*"
-            ]
-          }),
-          new iam.PolicyStatement({
-            effect: iam.Effect.ALLOW,
-            actions: [
-              "secretsmanager:*"
-            ],
-            resources: [
-              `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*`
-            ]
-          }),
-        ]
-      })
-    );
+    if (deployUserExist == 'true') {
+      iamDeployUser = iam.User.fromUserName(this, `UseExistentDeployUser`, `${repositoryName}-build`);
+    } else {
+      iamDeployUser = new iam.User(this, `CreateBuildIAMUser`, {
+        userName: `${repositoryName}-build`,
+      });
+  
+      iamDeployUser.applyRemovalPolicy((test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN);
+  
+      iamDeployUser.attachInlinePolicy(
+        new iam.Policy(this, `appsManageS3MediaApi`, {
+          policyName: `apps-manage-s3-media-api`,
+          statements: [
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: [
+                "s3:ListBucketMultipartUploads",
+                "ecr:GetDownloadUrlForLayer",
+                "s3:ListBucket",
+                "ecr:UploadLayerPart",
+                "s3:GetBucketAcl",
+                "ecr:ListImages",
+                "s3:GetBucketPolicy",
+                "s3:ListMultipartUploadParts",
+                "ecr:PutImage",
+                "s3:PutObject",
+                "s3:GetObjectAcl",
+                "s3:GetObject",
+                "iam:PassRole",
+                "secretsmanager:GetSecretValue",
+                "s3:AbortMultipartUpload",
+                "ecr:BatchGetImage",
+                "ecr:CompleteLayerUpload",
+                "ecr:DescribeRepositories",
+                "s3:DeleteObject",
+                "s3:GetBucketLocation",
+                "ecr:InitiateLayerUpload",
+                "s3:PutObjectAcl",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetRepositoryPolicy",
+                "s3:PutBucketPolicy"
+              ],
+              resources: [
+                `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*`,
+                `arn:aws:iam::${this.account}:role/*`,
+                `arn:aws:ecr:${this.region}:${this.account}:repository/*`
+              ]
+            }),
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: [
+                "ecs:UpdateCluster",
+                "ecs:UpdateService",
+                "ses:*",
+                "logs:*",
+                "ecs:RegisterTaskDefinition",
+                "ecr:GetAuthorizationToken",
+                "ecs:DescribeServices",
+                "codebuild:*"
+              ],
+              resources: [
+                "*"
+              ]
+            })
+          ]
+        })
+      );
+  
+      iamDeployUser.attachInlinePolicy(
+        new iam.Policy(this, `Secretmanager`, {
+          policyName: `ManageSecretsmanager`,
+          statements: [
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: [
+                "secretsmanager:GetRandomPassword",
+                "secretsmanager:ListSecrets"
+              ],
+              resources: [
+                "*"
+              ]
+            }),
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: [
+                "secretsmanager:*"
+              ],
+              resources: [
+                `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*`
+              ]
+            }),
+          ]
+        })
+      );
+    }
 
     const accessKey = new iam.CfnAccessKey(this, 'myAccessKey', {
       userName: iamDeployUser.userName,

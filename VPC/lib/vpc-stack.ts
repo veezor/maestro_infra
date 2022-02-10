@@ -16,7 +16,7 @@ export class VpcStack extends Stack {
 
     const test = this.node.tryGetContext('TEST');
     const vpcName = this.node.tryGetContext('VPC_NAME').toLowerCase();
-    const projectTags = this.node.tryGetContext('TAGS');
+    const projectTags = JSON.parse(this.node.tryGetContext('TAGS'));
 
     for (let i = 0; i < projectTags.length; i++) {
       let element = projectTags[i];

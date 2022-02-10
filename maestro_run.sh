@@ -46,6 +46,9 @@ repository_branch=$(cat $json_file | jq -r '.repository.branch')
 vpc_cidr=$(cat $json_file | jq -r '.vpc.cidr')
 vpc_id=$(cat $json_file | jq -r '.vpc.id')
 vpc_name=$(cat $json_file | jq -r '.vpc.name')
+environment=$(cat $json_file | jq -r '.environment')
+deploy_user_exist=$(cat $json_file | jq -r '.aws.iam.deploy_user_exist')
+app_user_exist=$(cat $json_file | jq -r '.aws.iam.app_user_exist')
 
 if [[ $repository_url =~ $re_repository_url ]]; then
   git_service=${BASH_REMATCH[1]}
@@ -55,7 +58,7 @@ else
   echo "Repository url not valid. Try again."
   exit 0
 fi
-
+while true; do
 PS3='Please enter your choice: '
 options=("Git_Update" "NPM_Update" "Bootstrap" "VPC" "Codebuild" "ECS" "Quit")
 select opt in "${options[@]}"
@@ -68,38 +71,45 @@ do
       ;;
     "NPM_Update")
       update_npm
+      break
     ;;
     "Bootstrap")
       echo "CDK Bootstrap"
       run_bootstrap
+      break
       ;;
     "VPC")
       echo "VPC will be created"
       create_vpc
+      break
       ;;
     "Codebuild")
       echo "Codebuild will be created"
       create_codebuild
+      break
       ;;
     "ECS")
       echo "ECS will be created"
       create_ecs
+      break
       ;;
     "Codebuild_ECS")
       echo "Codebuild and ECS will be created"
       create_codebuild
       create_ecs
+      break
       ;;
     "ALL")
       echo "VPC, Codebuild and ECS will be created"
       create_vpc
       create_codebuild
       create_ecs
+      break
       ;;
     "Quit")
-      break
+      break 2
       ;;
     *) echo "invalid option $REPLY";;
   esac
 done
-
+done

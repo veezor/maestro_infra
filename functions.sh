@@ -7,6 +7,7 @@ run_bootstrap() {
 
 create_vpc() {
   cd VPC
+  echo $environment
   cdk deploy \
     -c "PROJECT_OWNER=$project_owner" \
     -c "VPC_CIDR=$vpc_cidr" \
@@ -29,7 +30,8 @@ create_codebuild() {
     -c "PROJECT_OWNER=$project_owner" \
     -c "REPOSITORY_NAME=$repository_name" \
     -c "GIT_SERVICE=$git_service" \
-    -c "TAGS=$tags"
+    -c "TAGS=$tags" \
+    -c "DEPLOY_USER_EXIST=$deploy_user_exist" \
     --profile $aws_profile
   cd ..
 }
@@ -39,7 +41,6 @@ create_ecs() {
   read -p "Enter VPC ID [$vpc_id_env]: " vpc_id
   vpc_id=${vpc_id:-$vpc_id_env}
 
-  cd codebuild
   cd ECS
   cdk deploy \
     -c "PROJECT_OWNER=$project_owner" \
@@ -49,6 +50,7 @@ create_ecs() {
     -c "PROJECT_SECRETS=$secrets" \
     -c "TEST=$test" \
     -c "TAGS=$tags" \
+    -c "APP_USER_EXIST=$app_user_exist" \
     --profile $aws_profile
   cd ..
 }
