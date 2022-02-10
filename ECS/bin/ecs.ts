@@ -5,7 +5,7 @@ import { EcsStack } from '../lib/ecs-stack';
 
 const app = new cdk.App();
 
-new EcsStack(app, `${app.node.tryGetContext('PROJECT_OWNER')}-${app.node.tryGetContext('REPOSITORY_NAME')}-${app.node.tryGetContext('BRANCH')}-EcsStack`, {
+new EcsStack(app, `${app.node.tryGetContext('PROJECT_OWNER')}-${app.node.tryGetContext('REPOSITORY_NAME')}-${app.node.tryGetContext('BRANCH')}-MaestroEcsStack`, {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */
