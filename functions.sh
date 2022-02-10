@@ -1,6 +1,13 @@
 create_vpc() {
   cd VPC
-  cdk deploy -c "PROJECT_OWNER=$project_owner" -c "VPC_CIDR=$vpc_cidr" -c "TEST=$test" -c "VPC_NAME=$vpc_name" -c "ENVIRONMENT=$environment" --profile $aws_profile
+  cdk deploy \
+    -c "PROJECT_OWNER=$project_owner" \
+    -c "VPC_CIDR=$vpc_cidr" \
+    -c "TEST=$test" \
+    -c "VPC_NAME=$vpc_name" \
+    -c "ENVIRONMENT=$environment" \
+    -c "TAGS=$tags" \
+    --profile $aws_profile
   cd ..
 }
 
@@ -27,7 +34,15 @@ create_ecs() {
 
   cd codebuild
   cd ECS
-  cdk deploy -c "PROJECT_OWNER=$project_owner" -c "REPOSITORY_NAME=$repository_name" -c "BRANCH=$repository_branch" -c "VPC_ID=$vpc_id" -c "PROJECT_SECRETS=$secrets" -c "TEST=$test" --profile $aws_profile
+  cdk deploy \
+    -c "PROJECT_OWNER=$project_owner" \
+    -c "REPOSITORY_NAME=$repository_name" \
+    -c "BRANCH=$repository_branch" \
+    -c "VPC_ID=$vpc_id" \
+    -c "PROJECT_SECRETS=$secrets" \
+    -c "TEST=$test" \
+    -c "TAGS=$tags" \
+    --profile $aws_profile
   cd ..
 }
 
