@@ -42,7 +42,7 @@ update_code
 update_npm
 
 test=$(cat $json_file | jq -r '.test')
-tags=$(cat $jdon_file | jq -r '.tags')
+tags=$(cat $json_file | jq -r '.tags')
 secrets=$(cat $json_file | jq -r '.secrets')
 repository_url=$(cat $json_file | jq -r '.repository.url')
 repository_branch=$(cat $json_file | jq -r '.repository.branch')
