@@ -19,9 +19,10 @@ export class CodebuildStack extends Stack {
     const test = this.node.tryGetContext('TEST');
     const projectOwner = this.node.tryGetContext('PROJECT_OWNER').toLowerCase();
     const repositoryName = this.node.tryGetContext('REPOSITORY_NAME').toLowerCase();
-
+    const gitService = this.node.tryGetContext('GIT_SERVICE').toLowerCase();
+    
     let subnetsArns:any = [];
-
+    
     Tags.of(this).add('Project', repositoryName);
     
     const codeBuildLogGroup = new logs.LogGroup(this, `CreateCloudWatchcodeBuildLogGroup`, {
@@ -29,10 +30,17 @@ export class CodebuildStack extends Stack {
       removalPolicy: (test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN
     });
     
-    const gitHubSource = codebuild.Source.gitHub({
-      owner: projectOwner,
-      repo: repositoryName
-    });
+    var gitHubSource = codebuild.Source.gitHub({
+        owner: projectOwner,
+        repo: repositoryName
+      });
+    
+    if (gitService == 'bitbucket') {
+      gitHubSource = codebuild.Source.bitBucket({
+        owner: projectOwner,
+        repo: repositoryName
+      });
+    }
 
     const vpc = ec2.Vpc.fromLookup(this, 'UseExistingVPC', {
       vpcId: this.node.tryGetContext('VPC_ID')
