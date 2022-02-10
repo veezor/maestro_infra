@@ -1,3 +1,10 @@
+run_bootstrap() {
+  cd bootstrap
+  cdk bootstrap \
+    --profile $aws_profile 
+  cd ..
+}
+
 create_vpc() {
   cd VPC
   cdk deploy \

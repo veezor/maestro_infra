@@ -1,4 +1,6 @@
 #!/bin/bash
+set -x
+set -e
 
 source ./functions.sh
 
@@ -38,9 +40,6 @@ done
 re_repository_url="(github|bitbucket)(.com|.org)[\/]([^\/]+)[\/]([^\/.]+)"
 re_cidr="^([0-9]{1,3}\.){3}[0-9]{1,3}($|/(16|24))$"
 
-update_code
-update_npm
-
 test=$(cat $json_file | jq -r '.test')
 tags=$(cat $json_file | jq -r '.tags')
 secrets=$(cat $json_file | jq -r '.secrets')
@@ -60,37 +59,49 @@ else
 fi
 
 PS3='Please enter your choice: '
-options=("VPC" "Codebuild" "ECS" "Quit")
+options=("Git_Update" "NPM_Update" "Bootstrap" "VPC" "Codebuild" "ECS" "Quit")
 select opt in "${options[@]}"
 do
-    case $opt in
-        "VPC")
-            echo "VPC will be created"
-            create_vpc
-            ;;
-        "Codebuild")
-            echo "Codebuild will be created"
-            create_codebuild
-            ;;
-        "ECS")
-            echo "ECS will be created"
-            create_ecs
-            ;;
-        "Codebuild_ECS")
-            echo "Codebuild and ECS will be created"
-            create_codebuild
-            create_ecs
-            ;;
-        "ALL")
-            echo "VPC, Codebuild and ECS will be created"
-            create_vpc
-            create_codebuild
-            create_ecs
-            ;;
-        "Quit")
-            break
-            ;;
-        *) echo "invalid option $REPLY";;
-    esac
+  case $opt in
+    "Git_Update")
+      echo "Updating code"
+      update_code
+      exit 1
+      ;;
+    "NPM_Update")
+      update_npm
+    ;;
+    "Bootstrap")
+      echo "CDK Bootstrap"
+      run_bootstrap
+      ;;
+    "VPC")
+      echo "VPC will be created"
+      create_vpc
+      ;;
+    "Codebuild")
+      echo "Codebuild will be created"
+      create_codebuild
+      ;;
+    "ECS")
+      echo "ECS will be created"
+      create_ecs
+      ;;
+    "Codebuild_ECS")
+      echo "Codebuild and ECS will be created"
+      create_codebuild
+      create_ecs
+      ;;
+    "ALL")
+      echo "VPC, Codebuild and ECS will be created"
+      create_vpc
+      create_codebuild
+      create_ecs
+      ;;
+    "Quit")
+      break
+      ;;
+    *) echo "invalid option $REPLY";;
+  esac
 done
 
