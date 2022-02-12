@@ -7,7 +7,6 @@ run_bootstrap() {
 
 create_vpc() {
   cd VPC
-  echo $environment
   cdk deploy \
     -c "PROJECT_OWNER=$project_owner" \
     -c "VPC_CIDR=$vpc_cidr" \
@@ -27,6 +26,7 @@ create_codebuild() {
   cd codebuild
   cdk deploy -c "TEST=$test" \
     -c "VPC_ID=$vpc_id" \
+    -c "REPOSITORY_BRANCH=$repository_branch" \
     -c "PROJECT_OWNER=$project_owner" \
     -c "REPOSITORY_NAME=$repository_name" \
     -c "GIT_SERVICE=$git_service" \
@@ -53,6 +53,31 @@ create_ecs() {
     -c "APP_USER_EXIST=$app_user_exist" \
     --profile $aws_profile
   cd ..
+}
+
+create_sgs() {
+  vpc_id_env=$(cat $json_file | jq -r '.vpc.id')
+  read -p "Enter VPC ID [$vpc_id_env]: " vpc_id
+  vpc_id=${vpc_id:-$vpc_id_env}
+
+  aws ec2 create-security-group \
+    --tag-specifications $aws_cli_tags \
+    --group-name "${repository_name}-${repository_branch}-app-sg" \
+    --description 'APP SG' \
+    --vpc-id $vpc_id \
+    --profile $aws_profile
+  aws ec2 create-security-group \
+    --tag-specifications $aws_cli_tags \
+    --group-name "${repository_name}-${repository_branch}-codebuild-sg" \
+    --description 'CODEBUILD SG' \
+    --vpc-id $vpc_id \
+    --profile $aws_profile
+  aws ec2 create-security-group \
+    --tag-specifications $aws_cli_tags \
+    --group-name "${repository_name}-${repository_branch}-lb-sg" \
+    --description 'LOADBALANCER SG' \
+    --vpc-id $vpc_id \
+    --profile $aws_profile
 }
 
 update_code() {

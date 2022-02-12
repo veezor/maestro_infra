@@ -49,6 +49,21 @@ vpc_name=$(cat $json_file | jq -r '.vpc.name')
 environment=$(cat $json_file | jq -r '.environment')
 deploy_user_exist=$(cat $json_file | jq -r '.aws.iam.deploy_user_exist')
 app_user_exist=$(cat $json_file | jq -r '.aws.iam.app_user_exist')
+aws_cli_tags="ResourceType=security-group,Tags=["
+count=0
+
+while read object; do
+  if [[ $(($count%2)) -eq 0 ]]; then
+    aws_cli_tags+="{Key=$(echo $object | tr -d '"')"
+  elif [[ $(($count%2)) -eq 1 ]]; then
+    aws_cli_tags+=",Value=$(echo $object | tr -d '"')},"
+  fi
+
+  count=$(($count+1))
+done <<EOT
+$(echo -e $tags | jq -c '.[][]')
+EOT
+aws_cli_tags+="]"
 
 if [[ $repository_url =~ $re_repository_url ]]; then
   git_service=${BASH_REMATCH[1]}
@@ -81,6 +96,7 @@ do
     "VPC")
       echo "VPC will be created"
       create_vpc
+      create_sgs
       break
       ;;
     "Codebuild")

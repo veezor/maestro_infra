@@ -1,4 +1,20 @@
-import { Tags, Stack, StackProps, RemovalPolicy, aws_s3 as s3, aws_ec2 as ec2, aws_ecr as ecr, aws_ecs as ecs, aws_iam as iam, aws_logs as logs, aws_ecs_patterns as ecs_patterns, aws_secretsmanager as secretsmanager, CfnOutput } from 'aws-cdk-lib';
+import { Tags,
+  Stack,
+  StackProps,
+  RemovalPolicy,
+  aws_s3 as s3,
+  aws_ec2 as ec2,
+  aws_ecr as ecr,
+  aws_ecs as ecs,
+  aws_iam as iam,
+  aws_logs as logs,
+  aws_ecs_patterns as ecs_patterns,
+  aws_secretsmanager as secretsmanager,
+  CfnOutput,
+  aws_elasticloadbalancingv2 as elbv2,
+  aws_datasync
+} from 'aws-cdk-lib';
+import { LoadBalancer } from 'aws-cdk-lib/aws-elasticloadbalancing';
 import { ISecret } from 'aws-cdk-lib/aws-secretsmanager';
 import { ECRDeployment, DockerImageName } from 'cdk-ecr-deployment';
 import { Construct } from 'constructs';
@@ -59,11 +75,8 @@ export class EcsStack extends Stack {
     
     secrets.grantRead(codeBuildProjectRole);
 
-    const securityGroup = new ec2.SecurityGroup(this, `CreateApplicationSecurityGroup-${branch}`, {
-      securityGroupName: `${repositoryName}-${branch}-sg`,
-      allowAllOutbound: true,
-      vpc: vpc
-    });
+    const securityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedApplicationSecurityGroup',
+    `${repositoryName}-${branch}-app-sg`, vpc);
 
     if (appUserExist == 'true') {
       iamUser = iam.User.fromUserName(this, `UseExistingIAMUser-${branch}`, `${repositoryName}-${branch}`);
@@ -306,17 +319,30 @@ export class EcsStack extends Stack {
       }]
     });
 
+    const securityGroupLoadBalancer =  ec2.SecurityGroup.fromLookupByName(this, 'ImportedLoadBalancerSecurityGroup', `${repositoryName}-${branch}-lb-sg`, vpc);
+
+    const lb = new elbv2.ApplicationLoadBalancer(this, 'CreateLoadBalancer', {
+      vpc: vpc,
+      internetFacing: true,
+      loadBalancerName: `${repositoryName.replace('_','-')}-${branch}-lb`,
+      securityGroup: securityGroupLoadBalancer
+    });
+        
     const loadBalancerFargateService = new ecs_patterns.ApplicationLoadBalancedFargateService(this, `CreatLoadBalancer-${branch}`, {
       cluster: cluster,
       serviceName: `${repositoryName}-${branch}-web`,
       desiredCount: 1,
-      publicLoadBalancer: true,
       taskDefinition: taskDefinition,
       assignPublicIp: false,
-      loadBalancerName: `${repositoryName.replace('_','-')}-${branch}-lb`,
-      securityGroups: [securityGroup]
+      securityGroups: [securityGroup],
+      loadBalancer: lb,
+      targetProtocol: elbv2.ApplicationProtocol.HTTP,
+      protocol: elbv2.ApplicationProtocol.HTTP,
+      publicLoadBalancer: true,
+      listenerPort: 80,
+      redirectHTTP: false
     });
-
+    
     loadBalancerFargateService.targetGroup.configureHealthCheck({
       path: "/",
     });

@@ -22,6 +22,7 @@ export class CodebuildStack extends Stack {
     const gitService = this.node.tryGetContext('GIT_SERVICE').toLowerCase();
     const projectTags = JSON.parse(this.node.tryGetContext('TAGS'));
     const deployUserExist = this.node.tryGetContext('DEPLOY_USER_EXIST');
+    const branch = this.node.tryGetContext('REPOSITORY_BRANCH');
 
     let subnetsArns:any = [];
     var iamDeployUser:iam.IUser;
@@ -182,12 +183,7 @@ export class CodebuildStack extends Stack {
     });
     codeBuildProjectRole.applyRemovalPolicy((test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN);
 
-    const securityGroup = new ec2.SecurityGroup(this, `CreateCodeDeploySecurityGroup`, {
-      securityGroupName: `${repositoryName}-sg`,
-      allowAllOutbound: true,
-      vpc: vpc
-    });
-    securityGroup.applyRemovalPolicy((test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN);
+    const securityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildSecurityGroup', `${repositoryName}-${branch}-codebuild-sg`, vpc);
 
     const builderRepository = new ecr.Repository(this, 'public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l2');
 
