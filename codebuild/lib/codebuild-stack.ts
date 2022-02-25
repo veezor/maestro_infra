@@ -64,7 +64,7 @@ export class CodebuildStack extends Stack {
     };
 
     const codeBuildManagedPolicies = new iam.ManagedPolicy(this, `CreateCodeBuildPolicy`, {
-      managedPolicyName: `CodeBuild-${projectOwner}-${repositoryName}`,
+      managedPolicyName: `CodeBuild-${projectOwner}-${repositoryName}-${branch}`,
       statements: [
         new iam.PolicyStatement({
           sid: "ManageECR",
