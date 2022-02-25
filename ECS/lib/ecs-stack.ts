@@ -305,7 +305,7 @@ export class EcsStack extends Stack {
 
     taskDefinition.addContainer(`${projectOwner}-${repositoryName}-${branch}`, {
       image: ecs.ContainerImage.fromEcrRepository(ecrRepository),
-      containerName: `${projectOwner}-${repositoryName}-${branch}`,
+      containerName: `${projectOwner}-${repositoryName}`,
       memoryLimitMiB: 512,
       logging: new ecs.AwsLogDriver({
         streamPrefix: "ecs",
@@ -340,7 +340,10 @@ export class EcsStack extends Stack {
       protocol: elbv2.ApplicationProtocol.HTTP,
       publicLoadBalancer: true,
       listenerPort: 80,
-      redirectHTTP: false
+      redirectHTTP: false,
+      deploymentController: {
+        type: ecs.DeploymentControllerType.CODE_DEPLOY,
+      },
     });
     
     loadBalancerFargateService.targetGroup.configureHealthCheck({
