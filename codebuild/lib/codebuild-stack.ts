@@ -175,7 +175,7 @@ export class CodebuildStack extends Stack {
 
     const codeBuildProjectRole = new iam.Role(this, `CreateCodeBuildProjectRole`, {
       assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
-      roleName: `${projectOwner}-${repositoryName}-image-build-service-role`,
+      roleName: `${projectOwner}-${repositoryName}-${branch}-image-build-service-role`,
       path: '/service-role/',
       managedPolicies: [
         codeBuildManagedPolicies
@@ -188,7 +188,7 @@ export class CodebuildStack extends Stack {
     const builderRepository = new ecr.Repository(this, 'public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l2');
 
     new codebuild.Project(this, `CreateCodeBuildProject`, {
-      projectName: `${projectOwner}-${repositoryName}-image-build`,
+      projectName: `${projectOwner}-${repositoryName}-${branch}-image-build`,
       description: `Build to project ${repositoryName}, source from github, deploy to ECS fargate.`,
       badge: true,
       source: gitHubSource,

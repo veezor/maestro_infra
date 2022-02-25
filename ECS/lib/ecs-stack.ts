@@ -305,7 +305,7 @@ export class EcsStack extends Stack {
 
     taskDefinition.addContainer(`${projectOwner}-${repositoryName}-${branch}`, {
       image: ecs.ContainerImage.fromEcrRepository(ecrRepository),
-      containerName: `${projectOwner}-${repositoryName}-${branch}`,
+      containerName: `${projectOwner}-${repositoryName}`,
       memoryLimitMiB: 512,
       logging: new ecs.AwsLogDriver({
         streamPrefix: "ecs",
