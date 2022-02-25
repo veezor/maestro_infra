@@ -35,7 +35,7 @@ export class CodebuildStack extends Stack {
     }
     
     const codeBuildLogGroup = new logs.LogGroup(this, `CreateCloudWatchcodeBuildLogGroup`, {
-      logGroupName: `/aws/codebuild/${projectOwner}-${repositoryName}-image-build`,
+      logGroupName: `/aws/codebuild/${projectOwner}-${repositoryName}-${branch}-image-build`,
       removalPolicy: (test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN
     });
     
