@@ -96,11 +96,11 @@ do
     "VPC")
       echo "VPC will be created"
       create_vpc
-      create_sgs
       break
       ;;
     "Codebuild")
       echo "Codebuild will be created"
+      create_sgs
       create_codebuild
       break
       ;;
