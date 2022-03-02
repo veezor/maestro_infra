@@ -32,6 +32,7 @@ create_codebuild() {
     -c "GIT_SERVICE=$git_service" \
     -c "TAGS=$tags" \
     -c "DEPLOY_USER_EXIST=$deploy_user_exist" \
+    -c "VPC_SUBNETS"=$vpc_subnets \
     --profile $aws_profile
   cd ..
 }
@@ -50,6 +51,7 @@ create_ecs() {
     -c "PROJECT_SECRETS=$secrets" \
     -c "TEST=$test" \
     -c "TAGS=$tags" \
+    -c "VPC_SUBNETS"=$vpc_subnets \
     -c "APP_USER_EXIST=$app_user_exist" \
     --profile $aws_profile
   cd ..

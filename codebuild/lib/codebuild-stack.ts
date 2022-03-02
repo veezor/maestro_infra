@@ -1,7 +1,6 @@
 import {
   Tags,
   Stack,
-  CfnOutput,
   StackProps,
   RemovalPolicy,
   aws_ecr as ecr,
@@ -11,6 +10,9 @@ import {
   aws_codebuild as codebuild,
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import * as yaml from 'yaml';
+import * as fs from 'fs';
+import { IVpc } from 'aws-cdk-lib/aws-ec2';
 
 export class CodebuildStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -21,11 +23,11 @@ export class CodebuildStack extends Stack {
     const repositoryName = this.node.tryGetContext('REPOSITORY_NAME').toLowerCase();
     const gitService = this.node.tryGetContext('GIT_SERVICE').toLowerCase();
     const projectTags = JSON.parse(this.node.tryGetContext('TAGS'));
-    const deployUserExist = this.node.tryGetContext('DEPLOY_USER_EXIST');
-    const branch = this.node.tryGetContext('REPOSITORY_BRANCH');
+    const branch = this.node.tryGetContext('BRANCH');
+    const privateSubnetIds = JSON.parse(this.node.tryGetContext('VPC_SUBNETS'));
+    const vpcId = this.node.tryGetContext('VPC_ID');
 
     let subnetsArns:any = [];
-    var iamDeployUser:iam.IUser;
     
     Tags.of(this).add('Project', repositoryName);
 
@@ -41,27 +43,39 @@ export class CodebuildStack extends Stack {
     
     var gitHubSource = codebuild.Source.gitHub({
         owner: projectOwner,
-        repo: repositoryName
+        repo: repositoryName,
+        branchOrRef: branch
       });
     
     if (gitService == 'bitbucket') {
       gitHubSource = codebuild.Source.bitBucket({
         owner: projectOwner,
-        repo: repositoryName
+        repo: repositoryName,
+        branchOrRef: branch
       });
     }
 
-    const vpc = ec2.Vpc.fromLookup(this, 'UseExistingVPC', {
-      vpcId: this.node.tryGetContext('VPC_ID')
-    });
+    var vpc:IVpc; 
 
-    const vpcSubnets = vpc.selectSubnets({
+    if (privateSubnetIds.length > 0) {
+      vpc = ec2.Vpc.fromVpcAttributes(this, 'UseExistingVpc', {
+        availabilityZones: ec2.Vpc.fromLookup(this, 'GetAZsFromSubnet', { vpcId: vpcId }).availabilityZones,
+        vpcId: vpcId,
+        privateSubnetIds: privateSubnetIds
+      });
+    } else {
+      vpc = ec2.Vpc.fromLookup(this, 'UseExistingVPC', {
+        vpcId: vpcId
+      });
+    }
+
+    const Ids = vpc.selectSubnets({
       subnetType: ec2.SubnetType.PRIVATE
     });
 
-    for (let subnet of vpcSubnets.subnets) {
-      subnetsArns.push(`arn:aws:ec2:${this.region}:${this.account}:subnet/${subnet.subnetId}`)
-    };
+    for (let subnet of Ids.subnets) {
+      subnetsArns.push(`arn:aws:ec2:${this.region}:${this.account}:subnet/${subnet.subnetId}`);
+    }
 
     const codeBuildManagedPolicies = new iam.ManagedPolicy(this, `CreateCodeBuildPolicy`, {
       managedPolicyName: `CodeBuild-${projectOwner}-${repositoryName}-${branch}`,
@@ -78,7 +92,9 @@ export class CodebuildStack extends Stack {
             "ecr:BatchCheckLayerAvailability",
             "ecr:PutImage"
           ],
-          resources: [`arn:aws:ecr:${this.region}:${this.account}:repository/*`]
+          resources: [
+            `arn:aws:ecr:${this.region}:${this.account}:repository/${projectOwner}-${repositoryName}-${branch}*`
+          ]
         }),
         new iam.PolicyStatement({
           sid: "GetECRAuthorizedToken",
@@ -91,9 +107,11 @@ export class CodebuildStack extends Stack {
         new iam.PolicyStatement({
           sid: "ManageSecretValue",
           effect: iam.Effect.ALLOW,
-          actions: ["secretsmanager:GetSecretValue"],
+          actions: [
+            "secretsmanager:GetSecretValue"
+          ],
           resources: [
-            `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*/${projectOwner}-${repositoryName}*`
+            `arn:aws:secretsmanager:${this.region}:${this.account}:secret:${branch}/${projectOwner}-${repositoryName}`
           ]
         }),
         new iam.PolicyStatement({
@@ -107,21 +125,6 @@ export class CodebuildStack extends Stack {
           resources: [
             codeBuildLogGroup.logGroupArn,
             `${codeBuildLogGroup.logGroupArn}:*`
-          ]
-        }),
-        new iam.PolicyStatement({
-          sid: "ManageS3Bucket",
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "s3:PutObject",
-            "s3:GetObject",
-            "s3:GetObjectVersion",
-            "s3:GetBucketAcl",
-            "s3:GetBucketLocation"
-          ],
-          resources: [
-            "arn:aws:s3:::*",
-            "arn:aws:s3:::*/*"
           ]
         }),
         new iam.PolicyStatement({
@@ -185,19 +188,25 @@ export class CodebuildStack extends Stack {
 
     const securityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildSecurityGroup', `${repositoryName}-${branch}-codebuild-sg`, vpc);
 
-    const builderRepository = new ecr.Repository(this, 'public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l2');
+    
+    const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l3"); 
+
+    const customBuildSpec = yaml.parse(fs.readFileSync('../configs/codebuild/customBuildSpec.yaml', 'utf8'));
 
     new codebuild.Project(this, `CreateCodeBuildProject`, {
       projectName: `${projectOwner}-${repositoryName}-${branch}-image-build`,
       description: `Build to project ${repositoryName}, source from github, deploy to ECS fargate.`,
       badge: true,
       source: gitHubSource,
-      buildSpec: codebuild.BuildSpec.fromSourceFilename('.aws/codebuild/buildspec.yml'),
+      buildSpec: codebuild.BuildSpec.fromObjectToYaml(customBuildSpec),
       role: codeBuildProjectRole,
       securityGroups: [securityGroup],
       environment: {
-        buildImage: codebuild.LinuxBuildImage.fromEcrRepository(builderRepository),
-        privileged: true
+        buildImage: buildImage,
+        privileged: true,
+        environmentVariables: {
+          "MAESTRO_BRANCH_OVERRIDE": { value: "staging" }
+        }
       },
       vpc: vpc,
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER, codebuild.LocalCacheMode.SOURCE),
@@ -208,108 +217,5 @@ export class CodebuildStack extends Stack {
         }
       }
     });
-
-    if (deployUserExist == 'true') {
-      iamDeployUser = iam.User.fromUserName(this, `UseExistentDeployUser`, `${repositoryName}-build`);
-    } else {
-      iamDeployUser = new iam.User(this, `CreateBuildIAMUser`, {
-        userName: `${repositoryName}-build`,
-      });
-  
-      iamDeployUser.applyRemovalPolicy((test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN);
-  
-      iamDeployUser.attachInlinePolicy(
-        new iam.Policy(this, `appsManageS3MediaApi`, {
-          policyName: `apps-manage-s3-media-api`,
-          statements: [
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                "s3:ListBucketMultipartUploads",
-                "ecr:GetDownloadUrlForLayer",
-                "s3:ListBucket",
-                "ecr:UploadLayerPart",
-                "s3:GetBucketAcl",
-                "ecr:ListImages",
-                "s3:GetBucketPolicy",
-                "s3:ListMultipartUploadParts",
-                "ecr:PutImage",
-                "s3:PutObject",
-                "s3:GetObjectAcl",
-                "s3:GetObject",
-                "iam:PassRole",
-                "secretsmanager:GetSecretValue",
-                "s3:AbortMultipartUpload",
-                "ecr:BatchGetImage",
-                "ecr:CompleteLayerUpload",
-                "ecr:DescribeRepositories",
-                "s3:DeleteObject",
-                "s3:GetBucketLocation",
-                "ecr:InitiateLayerUpload",
-                "s3:PutObjectAcl",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:GetRepositoryPolicy",
-                "s3:PutBucketPolicy"
-              ],
-              resources: [
-                `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*`,
-                `arn:aws:iam::${this.account}:role/*`,
-                `arn:aws:ecr:${this.region}:${this.account}:repository/*`
-              ]
-            }),
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                "ecs:UpdateCluster",
-                "ecs:UpdateService",
-                "ses:*",
-                "logs:*",
-                "ecs:RegisterTaskDefinition",
-                "ecr:GetAuthorizationToken",
-                "ecs:DescribeServices",
-                "codebuild:*"
-              ],
-              resources: [
-                "*"
-              ]
-            })
-          ]
-        })
-      );
-  
-      iamDeployUser.attachInlinePolicy(
-        new iam.Policy(this, `Secretmanager`, {
-          policyName: `ManageSecretsmanager`,
-          statements: [
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                "secretsmanager:GetRandomPassword",
-                "secretsmanager:ListSecrets"
-              ],
-              resources: [
-                "*"
-              ]
-            }),
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                "secretsmanager:*"
-              ],
-              resources: [
-                `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*`
-              ]
-            }),
-          ]
-        })
-      );
-    }
-
-    const accessKey = new iam.CfnAccessKey(this, 'myAccessKey', {
-      userName: iamDeployUser.userName,
-    });
-
-    new CfnOutput(this, 'accessKeyId', {value: accessKey.ref });
-    new CfnOutput(this, 'secretAccessKey', { value: accessKey.attrSecretAccessKey });
   }
 }
