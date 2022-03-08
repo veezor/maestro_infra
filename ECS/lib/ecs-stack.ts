@@ -1,4 +1,5 @@
-import { Tags,
+import {
+  Tags,
   Stack,
   StackProps,
   RemovalPolicy,
@@ -14,8 +15,7 @@ import { Tags,
   aws_elasticloadbalancingv2 as elbv2,
   aws_datasync
 } from 'aws-cdk-lib';
-import { LoadBalancer } from 'aws-cdk-lib/aws-elasticloadbalancing';
-import { ISecret } from 'aws-cdk-lib/aws-secretsmanager';
+
 import { ECRDeployment, DockerImageName } from 'cdk-ecr-deployment';
 import { Construct } from 'constructs';
 
@@ -23,17 +23,19 @@ export class EcsStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
+    
     const test = this.node.tryGetContext('TEST');
     const vpcId = this.node.tryGetContext('VPC_ID');
     const branch = this.node.tryGetContext('BRANCH').toLowerCase();
-    const projectSecrets = this.node.tryGetContext('PROJECT_SECRETS');
+    const projectSecrets = JSON.parse(this.node.tryGetContext('PROJECT_SECRETS'));
     const projectOwner = this.node.tryGetContext('PROJECT_OWNER').toLowerCase();
     const repositoryName = this.node.tryGetContext('REPOSITORY_NAME').toLowerCase();
     const projectTags = JSON.parse(this.node.tryGetContext('TAGS'));
     const appUserExist = this.node.tryGetContext('APP_USER_EXIST').toLowerCase();
-
+    const privateSubnetIds = JSON.parse(this.node.tryGetContext('VPC_SUBNETS_PRIVATE'));
+    const publicSubnetIds = JSON.parse(this.node.tryGetContext('VPC_SUBNETS_PUBLIC'));
+    
     let subnetsArns:any = [];
-    var iamUser:iam.IUser;
     
     Tags.of(this).add('Project', repositoryName);
     Tags.of(this).add('Branch', branch);
@@ -48,136 +50,30 @@ export class EcsStack extends Stack {
       removalPolicy: test=='true' ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
     });
     
-    const vpc = ec2.Vpc.fromLookup(this, 'UseExistingVPC', {
-      vpcId:vpcId
-    });
+    const vpc = (privateSubnetIds.length > 0) ?
+      ec2.Vpc.fromVpcAttributes(this, 'UseExistingVpc', {
+        availabilityZones: ec2.Vpc.fromLookup(this, 'GetAZsFromSubnet', { vpcId: vpcId }).availabilityZones,
+        vpcId: vpcId,
+        privateSubnetIds: privateSubnetIds,
+        publicSubnetIds: publicSubnetIds
+      }) :
+      ec2.Vpc.fromLookup(this, 'UseExistingVPC', {
+        vpcId: vpcId
+      });
 
-    const vpcSubnets = vpc.selectSubnets({
+    const Ids = vpc.selectSubnets({
       subnetType: ec2.SubnetType.PRIVATE
     });
 
-    for (let subnet of vpcSubnets.subnets) {
-      subnetsArns.push(`arn:aws:ec2:${this.region}:${this.account}:subnet/${subnet.subnetId}`)
-    };
+    for (let subnet of Ids.subnets) {
+      subnetsArns.push(`arn:aws:ec2:${this.region}:${this.account}:subnet/${subnet.subnetId}`);
+    }
 
     const codeBuildProjectRole = iam.Role.fromRoleArn(this, 'UseBuildServiceRole',
-                                  `arn:aws:iam::${this.account}:role/service-role/${projectOwner}-${repositoryName}-image-build-service-role`);
-
-    const secrets = new secretsmanager.Secret(this, `CreateSecrets-${branch}`, {
-      secretName: `${branch}/${projectOwner}-${repositoryName}`,
-      description: `Used to project ${repositoryName}-${branch}`,
-      removalPolicy: test=='true' ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
-      generateSecretString: {
-        secretStringTemplate: projectSecrets,
-        generateStringKey: 'random'
-      }
-    });
-    
-    secrets.grantRead(codeBuildProjectRole);
+                                  `arn:aws:iam::${this.account}:role/service-role/${projectOwner}-${repositoryName}-${branch}-image-build-service-role`);
 
     const securityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedApplicationSecurityGroup',
     `${repositoryName}-${branch}-app-sg`, vpc);
-
-    if (appUserExist == 'true') {
-      iamUser = iam.User.fromUserName(this, `UseExistingIAMUser-${branch}`, `${repositoryName}-${branch}`);
-    } else {
-      iamUser = new iam.User(this, `CreateIAMUser-${branch}`, {
-        userName: `${repositoryName}-${branch}`,
-      });
-
-      iamUser.attachInlinePolicy(
-        new iam.Policy(this, `accessToS3BucketFrontend-${branch}`, {
-          policyName: `access-to-s3-bucket-fronend-${branch}`,
-          statements: [ 
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                "s3:PutObject",
-                "s3:ListBucket",
-                "s3:DeleteObject",
-                "s3:PutObjectAcl",
-                "s3:PutBucketPolicy"
-              ],
-              resources: ["*"],
-            }),
-          ]
-        })
-      );
-  
-      iamUser.attachInlinePolicy(
-        new iam.Policy(this, `appsManageS3Media-${branch}`, {
-          policyName: `apps-manage-s3-media-${branch}`,
-          statements: [
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:UploadLayerPart",
-                "ecr:ListImages",
-                "ecr:PutImage",
-                "iam:PassRole",
-                "secretsmanager:GetSecretValue",
-                "ecr:BatchGetImage",
-                "ecr:CompleteLayerUpload",
-                "ecr:DescribeRepositories",
-                "ecr:InitiateLayerUpload",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:GetRepositoryPolicy",
-              ],
-              resources: [
-                `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*`,
-                `arn:aws:iam::${this.account}:role/*`,
-                `arn:aws:ecr:${this.region}:${this.account}:*`
-              ]
-            }),
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                "ecs:UpdateCluster",
-                "ecs:UpdateService",
-                "ses:*",
-                "logs:*",
-                "ecs:RegisterTaskDefinition",
-                "ecr:GetAuthorizationToken",
-                "ecs:DescribeServices",
-                "codebuild:*"
-              ],
-              resources: [
-                "*"
-              ]
-            })
-          ]
-        })
-      )
-  
-      iamUser.attachInlinePolicy(
-        new iam.Policy(this, `${projectOwner}${repositoryName}Secretmanager-${branch}`, {
-          policyName: `${projectOwner}-${repositoryName}-secretmanager-${branch}`,
-          statements: [
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                "secretsmanager:GetRandomPassword",
-                "secretsmanager:ListSecrets"
-              ],
-              resources: [
-                "*"
-              ]
-            }),
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                "secretsmanager:*"
-              ],
-              resources: [
-                `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*`
-              ]
-            }),
-          ]
-        })
-      );
-    }
-
     
     const ecrRepository = new ecr.Repository(this, `CreateNewECRRepository-${branch}`, {
       repositoryName: `${projectOwner}-${repositoryName}-${branch}`,
@@ -190,13 +86,8 @@ export class EcsStack extends Stack {
     });
 
     const cluster = new ecs.Cluster(this, `CreateCluster-${branch}`, {
-      clusterName: `${repositoryName}-${branch}`,
+      clusterName: `${projectOwner}-${repositoryName}-${branch}`,
       vpc: vpc,
-    });
-    
-    const taskRole = new iam.Role(this, `CreateTaskRole-${branch}`, {
-      assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
-      roleName: `${projectOwner}-${repositoryName}-${branch}-service-role`
     });
 
     const executionRolePolicies = new iam.ManagedPolicy(this, `CreateExecutionRolePolicy-${branch}`, {
@@ -272,12 +163,23 @@ export class EcsStack extends Stack {
         new iam.PolicyStatement({
           sid: "ManageSecretValue",
           effect: iam.Effect.ALLOW,
-          actions: ["secretsmanager:GetSecretValue"],
+          actions: [
+            "secretsmanager:*"
+          ],
           resources: [
             `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*`
           ]
         })
       ]
+    });
+
+    const taskRole = new iam.Role(this, `CreateTaskRole-${branch}`, {
+      assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+      roleName: `${projectOwner}-${repositoryName}-${branch}-service-role`,
+      managedPolicies: [
+        executionRolePolicies
+      ],
+
     });
 
     const executionRole = new iam.Role(this, `CreateExecutionRole-${repositoryName}-${branch}`, {
@@ -288,6 +190,22 @@ export class EcsStack extends Stack {
       ]
     });
 
+    projectSecrets["TASK_ROLE_ARN"] = `arn:aws:iam::${this.account}:role/${projectOwner}-${repositoryName}-${branch}-service-role`;
+    projectSecrets["EXECUTION_ROLE_ARN"] = `arn:aws:iam::${this.account}:role/ecsTaskExecutionRole-${repositoryName}-${branch}`;
+    const secrets = new secretsmanager.Secret(this, `CreateSecrets-${branch}`, {
+      secretName: `${branch}/${projectOwner}-${repositoryName}`,
+      description: `Used to project ${repositoryName}-${branch}`,
+      removalPolicy: test=='true' ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
+      generateSecretString: {
+        secretStringTemplate: JSON.stringify(projectSecrets),
+        generateStringKey: 'random'
+      }
+    });
+    
+    secrets.grantRead(codeBuildProjectRole);
+
+    secrets.grantRead(executionRole);
+
     const taskDefinition = new ecs.FargateTaskDefinition(this, `CreateTaskDefinition-${branch}`, {
       family: `${projectOwner}-${repositoryName}-${branch}-web`,
       memoryLimitMiB: 512,
@@ -296,10 +214,9 @@ export class EcsStack extends Stack {
       executionRole: executionRole,
     });
 
-    
     var taskSecrets:{[key: string]: ecs.Secret} = {};
     
-    for (var key in JSON.parse(projectSecrets)) {
+    for (var key in projectSecrets) {
       taskSecrets[key] = ecs.Secret.fromSecretsManager(secrets,key);
     };
 

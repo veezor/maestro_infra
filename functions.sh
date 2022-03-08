@@ -26,12 +26,14 @@ create_codebuild() {
   cd codebuild
   cdk deploy -c "TEST=$test" \
     -c "VPC_ID=$vpc_id" \
-    -c "REPOSITORY_BRANCH=$repository_branch" \
+    -c "BRANCH=$repository_branch" \
     -c "PROJECT_OWNER=$project_owner" \
     -c "REPOSITORY_NAME=$repository_name" \
     -c "GIT_SERVICE=$git_service" \
     -c "TAGS=$tags" \
     -c "DEPLOY_USER_EXIST=$deploy_user_exist" \
+    -c "VPC_SUBNETS_PRIVATE"=$vpc_subnets_private \
+    -c "VPC_SUBNETS_PUBLIC"=$vpc_subnets_public \
     --profile $aws_profile
   cd ..
 }
@@ -50,6 +52,8 @@ create_ecs() {
     -c "PROJECT_SECRETS=$secrets" \
     -c "TEST=$test" \
     -c "TAGS=$tags" \
+    -c "VPC_SUBNETS_PRIVATE"=$vpc_subnets_private \
+    -c "VPC_SUBNETS_PUBLIC"=$vpc_subnets_public \
     -c "APP_USER_EXIST=$app_user_exist" \
     --profile $aws_profile
   cd ..
@@ -62,19 +66,19 @@ create_sgs() {
 
   aws ec2 create-security-group \
     --tag-specifications $aws_cli_tags \
-    --group-name "${repository_name}-${repository_branch}-app-sg" \
+    --group-name "${repository_name,,}-${repository_branch}-app-sg" \
     --description 'APP SG' \
     --vpc-id $vpc_id \
     --profile $aws_profile
   aws ec2 create-security-group \
     --tag-specifications $aws_cli_tags \
-    --group-name "${repository_name}-${repository_branch}-codebuild-sg" \
+    --group-name "${repository_name,,}-${repository_branch}-codebuild-sg" \
     --description 'CODEBUILD SG' \
     --vpc-id $vpc_id \
     --profile $aws_profile
   aws ec2 create-security-group \
     --tag-specifications $aws_cli_tags \
-    --group-name "${repository_name}-${repository_branch}-lb-sg" \
+    --group-name "${repository_name,,}-${repository_branch}-lb-sg" \
     --description 'LOADBALANCER SG' \
     --vpc-id $vpc_id \
     --profile $aws_profile

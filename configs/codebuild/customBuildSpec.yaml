@@ -1,0 +1,43 @@
+version: 0.2
+env:
+  shell: bash
+phases:
+  install:
+    commands:
+      - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &
+      - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
+  pre_build:
+    commands:
+      - AWS_ACCOUNT_ID=$(cut -d':' -f5 <<<"$CODEBUILD_BUILD_ARN")
+      - REPO_SLUG=$(sed 's/\//-/g' <<<$REPO)
+      - COMMIT_SHORT=$(head -c 8 <<<"$COMMIT")
+      - APP_SECRETS=$(aws secretsmanager get-secret-value --secret-id $BRANCH/$REPO_SLUG)
+      - APP_ENVS=$(jq -r '.SecretString | fromjson | to_entries | .[] | .key + "=" + (.value|tostring)' <<<$APP_SECRETS)
+      - |-
+        for ENV_LINE in $APP_ENVS; do
+          export "${ENV_LINE//\'/}"
+        done
+      - echo $APP_SECRETS | jq -r '.SecretString | fromjson | to_entries | .[] | .key' > .env
+  build:
+    on-failure: ABORT
+    commands:
+      - |
+        pack build $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_SLUG-$BRANCH:$COMMIT_SHORT \
+        --env-file .env \
+        --cache-image $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_SLUG-$BRANCH:cache \
+        --publish --quiet --builder heroku/buildpacks:20
+      - |
+        echo "$(jq --arg name $REPO_SLUG --arg name2 $REPO_SLUG-$BRANCH '( .containerDefinitions[] | select(.name == $name) ).name |= $name2' .aws/ecs/task-definition-web.json)" > .aws/ecs/task-definition-web.json
+  post_build:
+    commands:
+      - |
+        render.sh --task-definition .aws/ecs/task-definition-web.json \
+        --container-name $REPO_SLUG-$BRANCH \
+        --image $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_SLUG-$BRANCH:$COMMIT_SHORT \
+        --family-name $REPO_SLUG-$BRANCH-web \
+        --aws-sm-name $BRANCH/$REPO_SLUG \
+        --use-secrets --aws-sm-arns
+artifacts:
+  files:
+    - .aws/ecs/task-definition-web.json
+    - appspec.yaml

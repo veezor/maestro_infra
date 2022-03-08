@@ -46,6 +46,8 @@ repository_branch=$(cat $json_file | jq -r '.repository.branch')
 vpc_cidr=$(cat $json_file | jq -r '.vpc.cidr')
 vpc_id=$(cat $json_file | jq -r '.vpc.id')
 vpc_name=$(cat $json_file | jq -r '.vpc.name')
+vpc_subnets_private=$(cat $json_file | jq -r '.vpc.subnets.private')
+vpc_subnets_public=$(cat $json_file | jq -r '.vpc.subnets.public')
 environment=$(cat $json_file | jq -r '.environment')
 deploy_user_exist=$(cat $json_file | jq -r '.aws.iam.deploy_user_exist')
 app_user_exist=$(cat $json_file | jq -r '.aws.iam.app_user_exist')
@@ -96,11 +98,11 @@ do
     "VPC")
       echo "VPC will be created"
       create_vpc
-      create_sgs
       break
       ;;
     "Codebuild")
       echo "Codebuild will be created"
+      create_sgs
       create_codebuild
       break
       ;;

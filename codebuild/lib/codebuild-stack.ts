@@ -4,13 +4,14 @@ import {
   CfnOutput,
   StackProps,
   RemovalPolicy,
-  aws_ecr as ecr,
   aws_ec2 as ec2,
   aws_iam as iam,
   aws_logs as logs,
   aws_codebuild as codebuild,
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import * as yaml from 'yaml';
+import * as fs from 'fs';
 
 export class CodebuildStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -21,11 +22,14 @@ export class CodebuildStack extends Stack {
     const repositoryName = this.node.tryGetContext('REPOSITORY_NAME').toLowerCase();
     const gitService = this.node.tryGetContext('GIT_SERVICE').toLowerCase();
     const projectTags = JSON.parse(this.node.tryGetContext('TAGS'));
+    const branch = this.node.tryGetContext('BRANCH');
+    const privateSubnetIds = JSON.parse(this.node.tryGetContext('VPC_SUBNETS_PRIVATE'));
+    const vpcId = this.node.tryGetContext('VPC_ID');
     const deployUserExist = this.node.tryGetContext('DEPLOY_USER_EXIST');
-    const branch = this.node.tryGetContext('REPOSITORY_BRANCH');
 
     let subnetsArns:any = [];
-    var iamDeployUser:iam.IUser;
+
+    console.log(`test: ${test}`, `projectOwner: ${projectOwner}`, `repositoryName: ${repositoryName}`, `gitService: ${gitService}`, `projectTags: ${projectTags}`, `branch: ${branch}`, `privateSubnetIds: ${privateSubnetIds}`, `vpcId: ${vpcId}`, `deployUserExist: ${deployUserExist}`);
     
     Tags.of(this).add('Project', repositoryName);
 
@@ -35,37 +39,71 @@ export class CodebuildStack extends Stack {
     }
     
     const codeBuildLogGroup = new logs.LogGroup(this, `CreateCloudWatchcodeBuildLogGroup`, {
-      logGroupName: `/aws/codebuild/${projectOwner}-${repositoryName}-image-build`,
+      logGroupName: `/aws/codebuild/${projectOwner}-${repositoryName}-${branch}-image-build`,
       removalPolicy: (test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN
     });
     
     var gitHubSource = codebuild.Source.gitHub({
         owner: projectOwner,
-        repo: repositoryName
+        repo: repositoryName,
+        branchOrRef: branch
       });
     
     if (gitService == 'bitbucket') {
       gitHubSource = codebuild.Source.bitBucket({
         owner: projectOwner,
-        repo: repositoryName
+        repo: repositoryName,
+        branchOrRef: branch
       });
     }
 
-    const vpc = ec2.Vpc.fromLookup(this, 'UseExistingVPC', {
-      vpcId: this.node.tryGetContext('VPC_ID')
-    });
+    const vpc = (privateSubnetIds.length > 0) ? 
+      ec2.Vpc.fromVpcAttributes(this, 'UseExistingVpc', {
+        availabilityZones: ec2.Vpc.fromLookup(this, 'GetAZsFromSubnet', { vpcId: vpcId }).availabilityZones,
+        vpcId: vpcId,
+        privateSubnetIds: privateSubnetIds
+      }) :
+      ec2.Vpc.fromLookup(this, 'UseExistingVPC', {
+        vpcId: vpcId
+      });
 
-    const vpcSubnets = vpc.selectSubnets({
+    const Ids = vpc.selectSubnets({
       subnetType: ec2.SubnetType.PRIVATE
     });
 
-    for (let subnet of vpcSubnets.subnets) {
-      subnetsArns.push(`arn:aws:ec2:${this.region}:${this.account}:subnet/${subnet.subnetId}`)
-    };
+    for (let subnet of Ids.subnets) {
+      subnetsArns.push(`arn:aws:ec2:${this.region}:${this.account}:subnet/${subnet.subnetId}`);
+    }
 
     const codeBuildManagedPolicies = new iam.ManagedPolicy(this, `CreateCodeBuildPolicy`, {
-      managedPolicyName: `CodeBuild-${projectOwner}-${repositoryName}`,
+      managedPolicyName: `CodeBuild-${projectOwner}-${repositoryName}-${branch}`,
       statements: [
+        new iam.PolicyStatement({
+          sid: "ManagerCodestarConnection",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "codestar-connections:CreateConnection",
+            "codestar-connections:GetInstallationUrl",
+            "ec2:DeleteNetworkInterface",
+            "ecr:GetAuthorizationToken",
+            "ec2:DescribeDhcpOptions",
+            "codestar-connections:ListConnections",
+            "ec2:DescribeSecurityGroups",
+            "codestar-connections:GetIndividualAccessToken",
+            "ec2:CreateNetworkInterface",
+            "iam:PassRole",
+            "codestar-connections:ListInstallationTargets",
+            "ec2:DescribeNetworkInterfaces",
+            "codestar-connections:StartOAuthHandshake",
+            "ec2:DescribeVpcs",
+            "codestar-connections:ListHosts",
+            "codestar-connections:StartAppRegistrationHandshake",
+            "codestar-connections:RegisterAppCode",
+            "ec2:DescribeSubnets",
+            "codestar-connections:CreateHost"
+          ],
+          resources: ["*"]
+        }),
         new iam.PolicyStatement({
           sid: "ManageECR",
           effect: iam.Effect.ALLOW,
@@ -78,7 +116,7 @@ export class CodebuildStack extends Stack {
             "ecr:BatchCheckLayerAvailability",
             "ecr:PutImage"
           ],
-          resources: [`arn:aws:ecr:${this.region}:${this.account}:repository/*`]
+          resources: [`arn:aws:ecr:${this.region}:${this.account}:repository/${projectOwner}-${repositoryName}-${branch}*`]
         }),
         new iam.PolicyStatement({
           sid: "GetECRAuthorizedToken",
@@ -91,9 +129,9 @@ export class CodebuildStack extends Stack {
         new iam.PolicyStatement({
           sid: "ManageSecretValue",
           effect: iam.Effect.ALLOW,
-          actions: ["secretsmanager:GetSecretValue"],
+          actions: ["secretsmanager:*"],
           resources: [
-            `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*/${projectOwner}-${repositoryName}*`
+            `arn:aws:secretsmanager:${this.region}:${this.account}:secret:${branch}/${projectOwner}-${repositoryName}*`
           ]
         }),
         new iam.PolicyStatement({
@@ -175,7 +213,7 @@ export class CodebuildStack extends Stack {
 
     const codeBuildProjectRole = new iam.Role(this, `CreateCodeBuildProjectRole`, {
       assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
-      roleName: `${projectOwner}-${repositoryName}-image-build-service-role`,
+      roleName: `${projectOwner}-${repositoryName}-${branch}-image-build-service-role`,
       path: '/service-role/',
       managedPolicies: [
         codeBuildManagedPolicies
@@ -185,18 +223,20 @@ export class CodebuildStack extends Stack {
 
     const securityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildSecurityGroup', `${repositoryName}-${branch}-codebuild-sg`, vpc);
 
-    const builderRepository = new ecr.Repository(this, 'public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l2');
+    const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l2"); 
+
+    const customBuildSpec = yaml.parse(fs.readFileSync('../configs/codebuild/customBuildSpec.yaml', 'utf8'));
 
     new codebuild.Project(this, `CreateCodeBuildProject`, {
-      projectName: `${projectOwner}-${repositoryName}-image-build`,
+      projectName: `${projectOwner}-${repositoryName}-${branch}-image-build`,
       description: `Build to project ${repositoryName}, source from github, deploy to ECS fargate.`,
       badge: true,
       source: gitHubSource,
-      buildSpec: codebuild.BuildSpec.fromSourceFilename('.aws/codebuild/buildspec.yml'),
+      buildSpec: codebuild.BuildSpec.fromObjectToYaml(customBuildSpec),
       role: codeBuildProjectRole,
       securityGroups: [securityGroup],
       environment: {
-        buildImage: codebuild.LinuxBuildImage.fromEcrRepository(builderRepository),
+        buildImage: buildImage,
         privileged: true
       },
       vpc: vpc,
@@ -209,6 +249,8 @@ export class CodebuildStack extends Stack {
       }
     });
 
+    var iamDeployUser:iam.IUser;
+    
     if (deployUserExist == 'true') {
       iamDeployUser = iam.User.fromUserName(this, `UseExistentDeployUser`, `${repositoryName}-build`);
     } else {
