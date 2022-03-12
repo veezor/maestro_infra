@@ -219,6 +219,10 @@ export class CodebuildStack extends Stack {
         codeBuildManagedPolicies
       ]
     });
+    // codeBuildProjectRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName("SecretsManagerReadWrite"));
+    // codeBuildProjectRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName("AWSCodeStarServiceRole"));
+    // codeBuildProjectRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName("AWSCodeStarFullAccess"));
+
     codeBuildProjectRole.applyRemovalPolicy((test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN);
 
     const securityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildSecurityGroup', `${repositoryName}-${branch}-codebuild-sg`, vpc);

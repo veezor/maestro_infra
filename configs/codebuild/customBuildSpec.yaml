@@ -25,14 +25,12 @@ phases:
         pack build $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_SLUG-$BRANCH:$COMMIT_SHORT \
         --env-file .env \
         --cache-image $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_SLUG-$BRANCH:cache \
-        --publish --quiet --builder heroku/buildpacks:20
-      - |
-        echo "$(jq --arg name $REPO_SLUG --arg name2 $REPO_SLUG-$BRANCH '( .containerDefinitions[] | select(.name == $name) ).name |= $name2' .aws/ecs/task-definition-web.json)" > .aws/ecs/task-definition-web.json
+        --publish --quiet --builder
   post_build:
     commands:
       - |
         render.sh --task-definition .aws/ecs/task-definition-web.json \
-        --container-name $REPO_SLUG-$BRANCH \
+        --container-name $REPO_SLUG \
         --image $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_SLUG-$BRANCH:$COMMIT_SHORT \
         --family-name $REPO_SLUG-$BRANCH-web \
         --aws-sm-name $BRANCH/$REPO_SLUG \
