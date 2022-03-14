@@ -24,7 +24,7 @@ export class CodebuildStack extends Stack {
     const gitService = this.node.tryGetContext('GIT_SERVICE').toLowerCase();
     const projectTags = JSON.parse(this.node.tryGetContext('TAGS'));
     const branch = this.node.tryGetContext('BRANCH');
-    const privateSubnetIds = JSON.parse(this.node.tryGetContext('VPC_SUBNETS'));
+    const privateSubnetIds = JSON.parse(this.node.tryGetContext('VPC_SUBNETS_PRIVATE'));
     const vpcId = this.node.tryGetContext('VPC_ID');
 
     let subnetsArns:any = [];
@@ -55,19 +55,15 @@ export class CodebuildStack extends Stack {
       });
     }
 
-    var vpc:IVpc; 
-
-    if (privateSubnetIds.length > 0) {
-      vpc = ec2.Vpc.fromVpcAttributes(this, 'UseExistingVpc', {
+    const vpc = (privateSubnetIds.length > 0) ? 
+      ec2.Vpc.fromVpcAttributes(this, 'UseExistingVpc', {
         availabilityZones: ec2.Vpc.fromLookup(this, 'GetAZsFromSubnet', { vpcId: vpcId }).availabilityZones,
         vpcId: vpcId,
         privateSubnetIds: privateSubnetIds
-      });
-    } else {
-      vpc = ec2.Vpc.fromLookup(this, 'UseExistingVPC', {
+      }) :
+      ec2.Vpc.fromLookup(this, 'UseExistingVPC', {
         vpcId: vpcId
       });
-    }
 
     const Ids = vpc.selectSubnets({
       subnetType: ec2.SubnetType.PRIVATE
@@ -188,7 +184,6 @@ export class CodebuildStack extends Stack {
 
     const securityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildSecurityGroup', `${repositoryName}-${branch}-codebuild-sg`, vpc);
 
-    
     const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l3"); 
 
     const customBuildSpec = yaml.parse(fs.readFileSync('../configs/codebuild/customBuildSpec.yaml', 'utf8'));
@@ -205,7 +200,27 @@ export class CodebuildStack extends Stack {
         buildImage: buildImage,
         privileged: true,
         environmentVariables: {
-          "MAESTRO_BRANCH_OVERRIDE": { value: "staging" }
+          "MAESTRO_BRANCH_OVERRIDE": {
+            value: "staging"
+          },
+          "ECS_SERVICE_SUBNETS": {
+            value: Ids.subnetIds
+          },
+          "ECS_SERVICE_SECURITY_GROUPS": {
+            value: securityGroup.securityGroupId
+          },
+          "ECS_TASK_DEFINITION_TAGS": {
+            value: 'Owner=Bioritmo,Project=Minifactu,Environment=Staging,Branch=staging'
+          },
+          "ECS_TASK_ROLE_ARN": {
+            value: `arn:aws:iam::${this.account}:role/${projectOwner}-${repositoryName}-${branch}-service-role`
+          },
+          "ECS_EXECUTION_ROLE_ARN": {
+            value: `arn:aws:iam::691957199914:role/ecsTaskExecutionRole-${repositoryName}-${branch}`
+          },
+          "ECS_SERVICE_TASK_PROCESSES": {
+            value: "web"
+          }
         }
       },
       vpc: vpc,
