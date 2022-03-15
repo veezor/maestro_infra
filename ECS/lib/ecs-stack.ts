@@ -39,11 +39,6 @@ export class EcsStack extends Stack {
       Tags.of(this).add(element[0], element[1]);
     }
 
-    const ecsLogGroup = new logs.LogGroup(this, `CreateCloudWatchEcsLogGroup-${branch}`, {
-      logGroupName: `/ecs/${projectOwner}-${repositoryName}-${branch}-web`,
-      removalPolicy: test=='true' ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
-    });
-
     const vpc = (privateSubnetIds.length > 0) ?
       ec2.Vpc.fromVpcAttributes(this, 'UseExistingVpc', {
         availabilityZones: ec2.Vpc.fromLookup(this, 'GetAZsFromSubnet', { vpcId: vpcId }).availabilityZones,
