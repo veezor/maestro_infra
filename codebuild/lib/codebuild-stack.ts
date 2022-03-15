@@ -209,8 +209,11 @@ export class CodebuildStack extends Stack {
           "ECS_SERVICE_SECURITY_GROUPS": {
             value: securityGroup.securityGroupId
           },
-          "ECS_TASK_DEFINITION_TAGS": {
+          "WORKLOAD_RESOURCE_TAGS": {
             value: 'Owner=Bioritmo,Project=Minifactu,Environment=Staging,Branch=staging'
+          },
+          "WORKLOAD_VPC_ID": {
+            value: vpcId
           },
           "ECS_TASK_ROLE_ARN": {
             value: `arn:aws:iam::${this.account}:role/${projectOwner}-${repositoryName}-${branch}-service-role`
@@ -220,7 +223,14 @@ export class CodebuildStack extends Stack {
           },
           "ECS_SERVICE_TASK_PROCESSES": {
             value: "web"
-          }
+          },
+          "ALB_SUBNETS": {
+            value: Ids.subnetIds
+          },
+          "ALB_INTERNAL": {
+            value: "true"
+          },
+
         }
       },
       vpc: vpc,
