@@ -77,6 +77,14 @@ export class CodebuildStack extends Stack {
       managedPolicyName: `CodeBuild-${projectOwner}-${repositoryName}-${branch}`,
       statements: [
         new iam.PolicyStatement({
+          sid: "ManageRole",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "iam:PassRole"
+          ],
+          resources: ["*"]
+        }),
+        new iam.PolicyStatement({
           sid: "ManageECR",
           effect: iam.Effect.ALLOW,
           actions: [
@@ -88,43 +96,7 @@ export class CodebuildStack extends Stack {
             "ecr:BatchCheckLayerAvailability",
             "ecr:PutImage"
           ],
-          resources: [
-            `arn:aws:ecr:${this.region}:${this.account}:repository/${projectOwner}-${repositoryName}-${branch}*`
-          ]
-        }),
-        new iam.PolicyStatement({
-          sid: "ManageLoadBalancer",
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "elasticloadbalancing:CreateLoadBalancer",
-            "elasticloadbalancing:CreateTargetGroup",
-            "elasticloadbalancing:DescribeListeners",
-            "elasticloadbalancing:CreateListener",
-            "elasticloadbalancing:UpdateLoadBalancer",
-            "elasticloadbalancing:UpdateListener"
-          ],
-          resources: [
-            "*"
-          ]
-        }),
-        new iam.PolicyStatement({
-          sid: "ManageRole",
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "iam:PassRole"
-          ],
-          resources: ["*"]
-        }),
-        new iam.PolicyStatement({
-          sid: "ManageECS",
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "ecs:ListServices",
-            "ecs:RegisterTaskDefinition",
-            "ecs:CreateService",
-            "ecs:UpdateService",
-          ],
-          resources: ["*"]
+          resources: [`arn:aws:ecr:${this.region}:${this.account}:repository/*`]
         }),
         new iam.PolicyStatement({
           sid: "GetECRAuthorizedToken",
@@ -135,13 +107,22 @@ export class CodebuildStack extends Stack {
           resources: ["*"]
         }),
         new iam.PolicyStatement({
-          sid: "ManageSecretValue",
+          sid: "ManagerECS",
           effect: iam.Effect.ALLOW,
           actions: [
-            "secretsmanager:GetSecretValue"
+            "ecs:ListServices",
+				    "ecs:RegisterTaskDefinition",
+            "ecs:CreateService",
+				    "ecs:UpdateService"
           ],
+          resources: ["*"]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageSecretValue",
+          effect: iam.Effect.ALLOW,
+          actions: ["secretsmanager:GetSecretValue"],
           resources: [
-            `arn:aws:secretsmanager:${this.region}:${this.account}:secret:${branch}/${projectOwner}-${repositoryName}`
+            `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*/${projectOwner}-${repositoryName}*`
           ]
         }),
         new iam.PolicyStatement({
@@ -157,6 +138,21 @@ export class CodebuildStack extends Stack {
             `arn:aws:logs:${this.region}:${this.account}:log-group::*`,
             codeBuildLogGroup.logGroupArn,
             `${codeBuildLogGroup.logGroupArn}:*`
+          ]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageS3Bucket",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "s3:PutObject",
+            "s3:GetObject",
+            "s3:GetObjectVersion",
+            "s3:GetBucketAcl",
+            "s3:GetBucketLocation"
+          ],
+          resources: [
+            "arn:aws:s3:::*",
+            "arn:aws:s3:::*/*"
           ]
         }),
         new iam.PolicyStatement({
@@ -183,7 +179,16 @@ export class CodebuildStack extends Stack {
             "ec2:DeleteNetworkInterface",
             "ec2:DescribeSubnets",
             "ec2:DescribeSecurityGroups",
-            "ec2:DescribeVpcs"
+            "ec2:DescribeVpcs",
+            "ec2:CreateTags",
+            "ec2:DescribeAccountAttributes",
+            "ec2:DescribeInternetGateways",
+            "elasticloadbalancing:CreateListener",
+            "elasticloadbalancing:CreateLoadBalancer",
+            "elasticloadbalancing:DescribeListeners",
+            "elasticloadbalancing:DescribeLoadBalancers",
+            "elasticloadbalancing:DescribeTargetGroups",
+            "elasticloadbalancing:CreateTargetGroup"
           ],
           resources: [
             "*"
@@ -193,7 +198,9 @@ export class CodebuildStack extends Stack {
           sid: "ManageEC2NetworkInterface",
           effect: iam.Effect.ALLOW,
           actions: [
-            "ec2:CreateNetworkInterfacePermission"
+            "ec2:CreateNetworkInterface",
+            "ec2:CreateNetworkInterfacePermission",
+            "ec2:DeleteNetworkInterface"
           ],
           resources: [
             `arn:aws:ec2:${this.region}:${this.account}:network-interface/*`
@@ -222,7 +229,7 @@ export class CodebuildStack extends Stack {
 
     const albSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildAlbSecurityGroup', `${repositoryName}-${branch}-lb-sg`, vpc);
 
-    const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l5"); 
+    const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l4"); 
 
     const customBuildSpec = yaml.parse(fs.readFileSync('../configs/codebuild/customBuildSpec.yaml', 'utf8'));
 
