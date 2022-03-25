@@ -44,14 +44,14 @@ export class CodebuildStack extends Stack {
     var gitHubSource = codebuild.Source.gitHub({
         owner: projectOwner,
         repo: repositoryName,
-        branchOrRef: branch
+        branchOrRef: 'master-veezor'
       });
     
     if (gitService == 'bitbucket') {
       gitHubSource = codebuild.Source.bitBucket({
         owner: projectOwner,
         repo: repositoryName,
-        branchOrRef: branch
+        branchOrRef: 'master-veezor'
       });
     }
 
@@ -93,6 +93,40 @@ export class CodebuildStack extends Stack {
           ]
         }),
         new iam.PolicyStatement({
+          sid: "ManageLoadBalancer",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "elasticloadbalancing:CreateLoadBalancer",
+            "elasticloadbalancing:CreateTargetGroup",
+            "elasticloadbalancing:DescribeListeners",
+            "elasticloadbalancing:CreateListener",
+            "elasticloadbalancing:UpdateLoadBalancer",
+            "elasticloadbalancing:UpdateListener"
+          ],
+          resources: [
+            "*"
+          ]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageRole",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "iam:PassRole"
+          ],
+          resources: ["*"]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageECS",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "ecs:ListServices",
+            "ecs:RegisterTaskDefinition",
+            "ecs:CreateService",
+            "ecs:UpdateService",
+          ],
+          resources: ["*"]
+        }),
+        new iam.PolicyStatement({
           sid: "GetECRAuthorizedToken",
           effect: iam.Effect.ALLOW,
           actions: [
@@ -116,9 +150,11 @@ export class CodebuildStack extends Stack {
           actions: [
             "logs:CreateLogGroup",
             "logs:CreateLogStream",
-            "logs:PutLogEvents"
+            "logs:PutLogEvents",
+            "logs:DescribeLogGroups"
           ],
           resources: [
+            `arn:aws:logs:${this.region}:${this.account}:log-group::*`,
             codeBuildLogGroup.logGroupArn,
             `${codeBuildLogGroup.logGroupArn}:*`
           ]
@@ -184,7 +220,9 @@ export class CodebuildStack extends Stack {
 
     const securityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildSecurityGroup', `${repositoryName}-${branch}-codebuild-sg`, vpc);
 
-    const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l3"); 
+    const albSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildAlbSecurityGroup', `${repositoryName}-${branch}-lb-sg`, vpc);
+
+    const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l5"); 
 
     const customBuildSpec = yaml.parse(fs.readFileSync('../configs/codebuild/customBuildSpec.yaml', 'utf8'));
 
@@ -201,7 +239,7 @@ export class CodebuildStack extends Stack {
         privileged: true,
         environmentVariables: {
           "MAESTRO_BRANCH_OVERRIDE": {
-            value: "staging"
+            value: branch
           },
           "ECS_SERVICE_SUBNETS": {
             value: Ids.subnetIds
@@ -210,27 +248,38 @@ export class CodebuildStack extends Stack {
             value: securityGroup.securityGroupId
           },
           "WORKLOAD_RESOURCE_TAGS": {
-            value: 'Owner=Bioritmo,Project=Minifactu,Environment=Staging,Branch=staging'
-          },
-          "WORKLOAD_VPC_ID": {
-            value: vpcId
+            value: `Owner=${projectOwner},Project=${repositoryName},Environment=${branch},Branch=${branch}`
           },
           "ECS_TASK_ROLE_ARN": {
             value: `arn:aws:iam::${this.account}:role/${projectOwner}-${repositoryName}-${branch}-service-role`
           },
           "ECS_EXECUTION_ROLE_ARN": {
-            value: `arn:aws:iam::691957199914:role/ecsTaskExecutionRole-${repositoryName}-${branch}`
+            value: `arn:aws:iam::${this.account}:role/ecsTaskExecutionRole-${repositoryName}-${branch}`
           },
           "ECS_SERVICE_TASK_PROCESSES": {
-            value: "web"
+            value: "web:2{1024;2048},console{1024;2048}"
           },
           "ALB_SUBNETS": {
             value: Ids.subnetIds
           },
-          "ALB_INTERNAL": {
-            value: "true"
+          "ALB_SCHEME": {
+            value: "internal"
           },
-
+          "ALB_SECURITY_GROUPS": {
+            value: albSecurityGroup.securityGroupId
+          },
+          "WORKLOAD_VPC_ID": {
+            value: vpcId
+          },
+          "MAESTRO_NO_CACHE": {
+            value: false
+          },
+          "MAESTRO_CLEAR_CACHE": {
+            value: false
+          },
+          "MAESTRO_DEBUG": {
+            value: false
+          }
         }
       },
       vpc: vpc,
