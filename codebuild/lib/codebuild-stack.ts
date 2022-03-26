@@ -227,6 +227,8 @@ export class CodebuildStack extends Stack {
 
     const securityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildSecurityGroup', `${repositoryName}-${branch}-codebuild-sg`, vpc);
 
+    const appSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildSecurityGroup', `${repositoryName}-${branch}-app-sg`, vpc);
+
     const albSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildAlbSecurityGroup', `${repositoryName}-${branch}-lb-sg`, vpc);
 
     const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l4"); 
@@ -252,7 +254,7 @@ export class CodebuildStack extends Stack {
             value: Ids.subnetIds
           },
           "ECS_SERVICE_SECURITY_GROUPS": {
-            value: securityGroup.securityGroupId
+            value: appSecurityGroup.securityGroupId
           },
           "WORKLOAD_RESOURCE_TAGS": {
             value: `Owner=${projectOwner},Project=${repositoryName},Environment=${branch},Branch=${branch}`
