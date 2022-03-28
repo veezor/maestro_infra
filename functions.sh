@@ -31,8 +31,9 @@ create_codebuild() {
     -c "REPOSITORY_NAME=$repository_name" \
     -c "GIT_SERVICE=$git_service" \
     -c "TAGS=$tags" \
-    -c "DEPLOY_USER_EXIST=$deploy_user_exist" \
     -c "VPC_SUBNETS_PRIVATE"=$vpc_subnets_private \
+    -c "VPC_SUBNETS_PUBLIC"=$vpc_subnets_public \
+    -c "LOADBALANCER_SCHEME"=$loadbalancer_scheme \
     --profile $aws_profile
   cd ..
 }

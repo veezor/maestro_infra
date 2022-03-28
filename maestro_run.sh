@@ -49,7 +49,7 @@ vpc_name=$(cat $json_file | jq -r '.vpc.name')
 vpc_subnets_private=$(cat $json_file | jq -r '.vpc.subnets.private')
 vpc_subnets_public=$(cat $json_file | jq -r '.vpc.subnets.public')
 environment=$(cat $json_file | jq -r '.environment')
-deploy_user_exist=$(cat $json_file | jq -r '.aws.iam.deploy_user_exist')
+loadbalancer_scheme=$(cat $json_file | jq -r '.loadbalancer.scheme')
 aws_cli_tags="ResourceType=security-group,Tags=["
 count=0
 

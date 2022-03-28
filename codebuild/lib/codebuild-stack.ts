@@ -25,7 +25,9 @@ export class CodebuildStack extends Stack {
     const projectTags = JSON.parse(this.node.tryGetContext('TAGS'));
     const branch = this.node.tryGetContext('BRANCH');
     const privateSubnetIds = JSON.parse(this.node.tryGetContext('VPC_SUBNETS_PRIVATE'));
+    const publicSubnetIds = JSON.parse(this.node.tryGetContext('VPC_SUBNETS_PUBLIC'));
     const vpcId = this.node.tryGetContext('VPC_ID');
+    const loadbalancerScheme = this.node.tryGetContext('LOADBALANCER_SCHEME');
 
     let subnetsArns:any = [];
     
@@ -59,7 +61,8 @@ export class CodebuildStack extends Stack {
       ec2.Vpc.fromVpcAttributes(this, 'UseExistingVpc', {
         availabilityZones: ec2.Vpc.fromLookup(this, 'GetAZsFromSubnet', { vpcId: vpcId }).availabilityZones,
         vpcId: vpcId,
-        privateSubnetIds: privateSubnetIds
+        privateSubnetIds: privateSubnetIds,
+        publicSubnetIds: publicSubnetIds
       }) :
       ec2.Vpc.fromLookup(this, 'UseExistingVPC', {
         vpcId: vpcId
@@ -70,7 +73,7 @@ export class CodebuildStack extends Stack {
     });
 
     for (let subnet of Ids.subnets) {
-      subnetsArns.push(`arn:aws:ec2:${this.region}:${this.account}:subnet/${subnet.subnetId}`);
+      subnetsArns.push(`arn:aws:ec2:${this.region}:${this.account}:subnet/${subnet.subnetId}`); 
     }
 
     const codeBuildManagedPolicies = new iam.ManagedPolicy(this, `CreateCodeBuildPolicy`, {
@@ -227,7 +230,7 @@ export class CodebuildStack extends Stack {
 
     const securityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildSecurityGroup', `${repositoryName}-${branch}-codebuild-sg`, vpc);
 
-    const appSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildSecurityGroup', `${repositoryName}-${branch}-app-sg`, vpc);
+    const appSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedAppSecurityGroup', `${repositoryName}-${branch}-app-sg`, vpc);
 
     const albSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildAlbSecurityGroup', `${repositoryName}-${branch}-lb-sg`, vpc);
 
@@ -251,7 +254,7 @@ export class CodebuildStack extends Stack {
             value: branch
           },
           "ECS_SERVICE_SUBNETS": {
-            value: Ids.subnetIds
+            value: privateSubnetIds.toString()
           },
           "ECS_SERVICE_SECURITY_GROUPS": {
             value: appSecurityGroup.securityGroupId
@@ -269,10 +272,10 @@ export class CodebuildStack extends Stack {
             value: "web:2{1024;2048},console{1024;2048}"
           },
           "ALB_SUBNETS": {
-            value: Ids.subnetIds
+            value: (loadbalancerScheme == "intenal") ? privateSubnetIds.toString() : publicSubnetIds.toString()
           },
           "ALB_SCHEME": {
-            value: "internal"
+            value: loadbalancerScheme
           },
           "ALB_SECURITY_GROUPS": {
             value: albSecurityGroup.securityGroupId
