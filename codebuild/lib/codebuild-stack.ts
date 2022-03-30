@@ -30,7 +30,7 @@ export class CodebuildStack extends Stack {
     const loadbalancerScheme = this.node.tryGetContext('LOADBALANCER_SCHEME');
 
     let subnetsArns:any = [];
-    
+
     Tags.of(this).add('Project', repositoryName);
 
     for (let i = 0; i < projectTags.length; i++) {
@@ -138,9 +138,7 @@ export class CodebuildStack extends Stack {
             "logs:DescribeLogGroups"
           ],
           resources: [
-            `arn:aws:logs:${this.region}:${this.account}:log-group::*`,
-            codeBuildLogGroup.logGroupArn,
-            `${codeBuildLogGroup.logGroupArn}:*`
+            `*`
           ]
         }),
         new iam.PolicyStatement({
