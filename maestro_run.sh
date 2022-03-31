@@ -34,9 +34,11 @@ while (( "$#" )); do
       ;;
   esac
 done
-
+ 
 re_repository_url="(github|bitbucket)(.com|.org)[\/]([^\/]+)[\/]([^\/.]+)"
 re_cidr="^([0-9]{1,3}\.){3}[0-9]{1,3}($|/(16|24))$"
+
+validate_env_file
 
 test=$(cat $json_file | jq -r '.test')
 tags=$(cat $json_file | jq -r '.tags')
