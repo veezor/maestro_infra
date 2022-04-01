@@ -90,7 +90,9 @@ update_code() {
 
 update_npm() {
   echo Installing NPM dependencies in all projects...
-  cd VPC
+  cd bootstrap
+  npm install
+  cd ../VPC
   npm install
   cd ../codebuild
   npm install
