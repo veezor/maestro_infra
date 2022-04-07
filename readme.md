@@ -389,7 +389,7 @@ yarn why v1.22.17
 [4/4] Calculating file sizes...
 => Found "webpack@4.29.5"
 info Has been hoisted to "webpack"
-info This module exists because it's specified in "dependencies".
+info This module exists because it´s specified in "dependencies".
 info Disk size without dependencies: "2.3MB"
 info Disk size with unique dependencies: "8.13MB"
 info Disk size with transitive dependencies: "25.29MB"
