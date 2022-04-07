@@ -122,7 +122,7 @@ Mais informações:
 ### Descritivo de projeto para os buildpacks
 Todo projeto precisa de um arquivo descritivo que compõe as dependências do builder, buildpacks e facilita a automação do processo de build. Esse arquivo por padrão fica na raiz do projeto e é chamado `project.toml`. A maior parte dos workloads pode ser resolvidos com o builder mais atual do heroku conforme o exemplo abaixo:
 
-```
+``` toml
 [project]
 id = "com.veezor.meu-projeto"
 name = "Meu Projeto"
@@ -245,7 +245,7 @@ A maior parte da documentação específica de utilização de buildpacks com o 
 
 O buildpack padrão de node.js consegue criar o `procfile` automaticamente com um processo padrão do tipo `web` caso exista um arquivo na raiz do projeto chamado `index.js` ou `server.js` ([Referência](https://github.com/heroku/buildpacks-nodejs/blob/daafb50f1017e51a005d5adcf8145b9c5245ee39/buildpacks/nodejs-engine/lib/build.sh#L236-L248)). Outra forma é definindo-se no manifesto do node.js chamado `package.json` que em geral fica na raiz do projeto um script chamado `start` ([Referência npm](https://github.com/heroku/buildpacks-nodejs/blob/daafb50f1017e51a005d5adcf8145b9c5245ee39/buildpacks/npm/lib/build.sh#L216-L221), [Referência yarn](https://github.com/heroku/buildpacks-nodejs/blob/5f21334ca7e58130a1fae2ebb781427a74ea75f2/buildpacks/yarn/lib/build.sh#L144-L149)) conforme o exemplo abaixo:
 
-```
+``` json
 {
   "name": "meu-projeto",
   "version": "1.0.0",
@@ -272,7 +272,7 @@ Caso o PM2 seja por algum motivo indispensável para a aplicação, aqui segue u
 
 Para que sejam executados comandos posteriores à instalação das bibliotecas definidas pelo arquivo de manifesto `package.json`, é necessário definir um script com o nome `heroku-postbuild` e dessa forma o buildpack vai automaticamente executar após a conclusão da instalação. Segue exemplo abaixo:
 
-```
+``` json
 {
   "name": "meu-projeto",
   "version": "1.0.0",
@@ -330,7 +330,7 @@ $ yarn install <nome-do-pacote>
 
 Para garantir um build estável é importante definir versões de engines do workload dentro do arquivo de manifesto do node.js chamado `package.json` que em geral fica na raiz do projeto. Um exemplo do trecho pode ser visto abaixo:
 
-```
+``` json
 {
   "name": "meu-projeto",
   "version": "1.0.0",
@@ -360,7 +360,7 @@ ou
 
 Neste caso, se a biblioteca em questão já estiver listada no bloco dependencies, a melhor forma é criar um bloco resolutions forçando a biblioteca que está compatibilizando ou aproximando as versões a usar a versão desejada conforme o exemplo abaixo onde definimos o pacote em questão como webpack:
 
-```
+``` json
 {
   "name": "meu-projeto",
   "version": "1.0.0",
@@ -381,7 +381,7 @@ Neste caso, se a biblioteca em questão já estiver listada no bloco dependencie
 
 Rodando então o comando `yarn why` webpack teremos:
 
-```
+``` bash
 yarn why v1.22.17
 [1/4] Why do we have the module "webpack"...?
 [2/4] Initialising dependency graph...
@@ -405,7 +405,7 @@ Done in 1.27s.
 
 Dado que a dependência está levando a versão declarada (4.29.5) para a versão compatibilizada (4.46.0), a solução para forçar a resolução na versão desejada é ao invés de ter webpack como uma dependência direta, forçar sua resolução na dependência para a versão desejada conforme abaixo:
 
-```
+``` json
 {
   "name": "meu-projeto",
   "version": "1.0.0",
