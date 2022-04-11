@@ -52,6 +52,7 @@ vpc_subnets_private=$(cat $json_file | jq -r '.vpc.subnets.private')
 vpc_subnets_public=$(cat $json_file | jq -r '.vpc.subnets.public')
 environment=$(cat $json_file | jq -r '.environment')
 loadbalancer_scheme=$(cat $json_file | jq -r '.loadbalancer.scheme')
+efs_volumes=$(cat $json_file | jq -r '.efs | tostring')
 aws_cli_tags="ResourceType=security-group,Tags=["
 count=0
 

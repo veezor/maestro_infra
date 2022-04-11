@@ -28,6 +28,7 @@ export class CodebuildStack extends Stack {
     const publicSubnetIds = JSON.parse(this.node.tryGetContext('VPC_SUBNETS_PUBLIC'));
     const vpcId = this.node.tryGetContext('VPC_ID');
     const loadbalancerScheme = this.node.tryGetContext('LOADBALANCER_SCHEME');
+    const efsVolumes = JSON.parse(this.node.tryGetContext('EFS_VOLUMES'));
 
     let subnetsArns:any = [];
 
@@ -68,11 +69,15 @@ export class CodebuildStack extends Stack {
         vpcId: vpcId
       });
 
-    const Ids = vpc.selectSubnets({
+    const pubIds = vpc.selectSubnets({
+      subnetType: ec2.SubnetType.PUBLIC
+    });
+
+    const priIds = vpc.selectSubnets({
       subnetType: ec2.SubnetType.PRIVATE
     });
 
-    for (let subnet of Ids.subnets) {
+    for (let subnet of priIds.subnets) {
       subnetsArns.push(`arn:aws:ec2:${this.region}:${this.account}:subnet/${subnet.subnetId}`); 
     }
 
@@ -235,6 +240,27 @@ export class CodebuildStack extends Stack {
     const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l4"); 
 
     const customBuildSpec = yaml.parse(fs.readFileSync('../configs/codebuild/customBuildSpec.yaml', 'utf8'));
+    
+    var efsVolumesString = "";
+    if (efsVolumes.length >= 1) {
+      for (let i = 0; i < efsVolumes.length; i++) {
+        let parameters = ""
+        for (let p = 0; p < efsVolumes[i].parameters.length; p++) {
+          parameters = parameters.concat(";", efsVolumes[i].parameters[p]);
+        }
+        efsVolumesString = efsVolumesString.concat(efsVolumes[i].name, ":", efsVolumes[i].id, "(", efsVolumes[i].destination, parameters, ")", (i +1 < efsVolumes.length) ? "," : "" );        
+      }
+    };
+
+    var privateSubnetIdsString = [];
+    for (let subnet of priIds.subnets) {
+      privateSubnetIdsString.push(subnet.subnetId); 
+    };
+
+    var publicSubnetIdsString = [];
+    for (let subnet of pubIds.subnets) {
+      publicSubnetIdsString.push(subnet.subnetId); 
+    };
 
     new codebuild.Project(this, `CreateCodeBuildProject`, {
       projectName: `${projectOwner}-${repositoryName}-${branch}-image-build`,
@@ -252,7 +278,7 @@ export class CodebuildStack extends Stack {
             value: branch
           },
           "ECS_SERVICE_SUBNETS": {
-            value: privateSubnetIds.toString()
+            value: privateSubnetIdsString.join(",")
           },
           "ECS_SERVICE_SECURITY_GROUPS": {
             value: appSecurityGroup.securityGroupId
@@ -270,7 +296,7 @@ export class CodebuildStack extends Stack {
             value: "web:2{1024;2048},console{1024;2048}"
           },
           "ALB_SUBNETS": {
-            value: (loadbalancerScheme == "intenal") ? privateSubnetIds.toString() : publicSubnetIds.toString()
+            value: publicSubnetIdsString.join(",")
           },
           "ALB_SCHEME": {
             value: loadbalancerScheme
@@ -289,6 +315,9 @@ export class CodebuildStack extends Stack {
           },
           "MAESTRO_DEBUG": {
             value: false
+          },
+          "ECS_EFS_VOLUMES": {
+            value: efsVolumesString
           }
         }
       },

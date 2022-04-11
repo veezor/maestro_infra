@@ -15,5 +15,28 @@
       "public": "[\"subnet-0f8643c1901be3c84\",\"subnet-0f737e6df3dfb3b57\"]"
     }
   },
+  "loadbalancer":{
+    "scheme": "internet-facing"
+  },
+  "efs": [
+    {
+      "name": "storage-efs",
+      "id": "fs-013a69f90df46413",
+      "destination": "/@public/images",
+      "parameters": ["encrypted","outro"]
+    },
+    {
+      "name": "imagens-efs",
+      "id": "fs-0bd8f82bba0a89448",
+      "destination": "/@public/storage",
+      "parameters": ["encrypted", "outro2", "outro3"]
+    },
+    {
+      "name": "imagens-efs",
+      "id": "fs-0bd8f82bba0a89448",
+      "destination": "/@public/storage",
+      "parameters": ["encrypted", "outro5", "outro6"]
+    }
+  ],
   "tags": "[[\"owner\",\"veeezor\"],[\"environment\",\"staging\"]]"
 }

@@ -34,6 +34,7 @@ create_codebuild() {
     -c "VPC_SUBNETS_PRIVATE"=$vpc_subnets_private \
     -c "VPC_SUBNETS_PUBLIC"=$vpc_subnets_public \
     -c "LOADBALANCER_SCHEME"=$loadbalancer_scheme \
+    -c "EFS_VOLUMES"=$efs_volumes \
     --profile $aws_profile
   cd ..
 }
@@ -111,114 +112,108 @@ validate_env_file() {
 
   has_vpc=$(cat $json_file | jq 'has("vpc")')
   has_loadbalancer=$(cat $json_file | jq 'has("loadbalancer")')
-  has_tags=$(cat $json_file | jq 'has("tags")')
-  has_test=$(cat $json_file | jq 'has("test")')
-  has_test=$(cat $json_file | jq 'has("test")')
-  has_test=$(cat $json_file | jq 'has("test")')
-  has_test=$(cat $json_file | jq 'has("test")')
-  has_test=$(cat $json_file | jq 'has("test")')
-  
 
-  has_test=$(cat $json_file | jq 'has("test")')
+  has_test=$(cat $json_file | jq 'has("test")')  
+  printf "Key test "
   if [ $has_test == true ]; then
-    echo "Key test found - OK"
-
+    printf "found, "
     test_value=$(cat $json_file | jq '.test')
     if [[ "$test_value" == true ]] || [[ "$test_value" = false ]]; then
-      echo "Test value is: $test_value - OK"
+      echo "with value: $test_value - OK"
     else
-      echo "Test value is not valid, acceptable is (true|false). - FAIL"
+      echo "with no valid value, values acceptable is (true|false). - Fix it and try again."
       exit 0
     fi
   else
-    echo "Key test not found - FAIL"
+    printf "not found - Fix it and try again."
     exit 0
   fi
 
   has_environment=$(cat $json_file | jq 'has("environment")')
+  printf "Key environment "
   if [ $has_environment == true ]; then
-    echo "Key environment found - OK"
+    printf "found, "
 
     environment_value=$(cat $json_file | jq '.environment')
     if [[ "$environment_value" == \"production\" ]] || [[ "$environment_value" == \"staging\" ]]; then
-      echo "Environment value is: $environment_value - OK"
+      echo "with value: $environment_value - OK"
     else
-      echo "Environment value $environment_value is not valid, acceptable value is ('production'|'staging'). - FAIL"
+      echo "with no valid value, acceptable value is ('production'|'staging'). - Fix it and try again."
       exit 0
     fi
   else
-    echo "Key environment not found - FAIL"
+    echo "not found - Fix it and try again."
     exit 0
   fi
 
   has_secrets=$(cat $json_file | jq 'has("secrets")')
+    printf "Key secrets "
   if [ $has_secrets == true ]; then
-    echo "Key secrets found - OK"
-
+    printf "found, "
     secrets_value=$(cat $json_file | jq '.secrets')
-    echo "Secrets value is: $secrets_value"
+    echo "with value: $secrets_value - OK"
   else
-    echo "Key secrets not found - FAIL"
+    echo "not found - Fix it and try again."
     exit 0
   fi
 
   has_repository=$(cat $json_file | jq 'has("repository")')
+  printf "Key repository "
   if [ $has_repository == true ]; then
-    echo "Key repository found - OK"
-
+    printf "found, "
     has_repository_url=$(cat $json_file | jq '.repository' | jq 'has("url")' )
     if [ $has_repository_url == true ]; then
-      echo "Key repository.url found - OK"
+      printf "containing a url key, "
 
       repository_url_value=$(cat $json_file | jq '.repository.url')
       if [[ $repository_url_value =~ $re_repository_url ]]; then
-        echo "repository.url value is: $repository_url_value - OK"
+        printf "with value: $repository_url_value "
       else
-        echo "repository.url value is not valid, acceptable value is a github ou bitbucket repository url with https://... - FAIL"
+        echo "with no valide value, acceptable value is a github ou bitbucket repository url with https://... - FAIL"
         exit 0
       fi
     else
-      echo "Key repository.url not found - FAIL"
+      echo "and key repository.url not found - FAIL"
       exit 0
     fi
 
     has_repository_branch=$(cat $json_file | jq '.repository' | jq 'has("branch")' )
     if [ $has_repository_branch == true ]; then
-      echo "Key repository.branch found - OK"
+      printf "and the branch key "
 
       repository_branch_value=$(cat $json_file | jq '.repository.branch')
       if [[ $repository_branch_value = \"production\" ]] || [[ $repository_branch_value = \"staging\" ]]; then
-        echo "repository.branch value is: $repository_branch_value - OK"
+        echo "with value: $repository_branch_value - OK"
       else
-        echo "repository.branch value is not valid, acceptable value is ('production'|'staging') - FAIL"
+        echo "with no valid value, acceptable value is ('production'|'staging') - FAIL"
         exit 0
       fi
     else
-      echo "Key repository.branch not found - FAIL"
+      echo "is not found - FAIL"
       exit 0
     fi
   else
-    echo "Key repository not found - FAIL"
+    echo "is not found - FAIL"
     exit 0
   fi
 
   has_vpc=$(cat $json_file | jq 'has("vpc")')
+  printf "Key vpc "
   if [ $has_vpc == true ]; then
-    echo "Key vpc found - OK"
+    printf "found, "
 
     has_vpc_name=$(cat $json_file | jq '.vpc' | jq 'has("name")' )
     if [ $has_vpc_name == true ]; then
-      echo "Key vpc.name found - OK"
-
+      printf "containig a name key "
       vpc_name_value=$(cat $json_file | jq '.vpc.name')
       if [[ $vpc_name_value != null ]]; then
-        echo "vpc.name value is: $vpc_name_value - OK"
+        echo "with value: $vpc_name_value - OK"
       else
-        echo "vpc.name value is not valid - FAIL"
+        echo "with not valid value - FAIL"
         exit 0
       fi
     else
-      echo "Key vpc.name not found - FAIL"
+      echo " not found - FAIL"
       exit 0
     fi
 
