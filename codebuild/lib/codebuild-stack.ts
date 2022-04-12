@@ -296,7 +296,7 @@ export class CodebuildStack extends Stack {
             value: "web:2{1024;2048},console{1024;2048}"
           },
           "ALB_SUBNETS": {
-            value: publicSubnetIdsString.join(",")
+            value: (loadbalancerScheme == "intenal") ? privateSubnetIdsString.join(",") : publicSubnetIdsString.join(",")
           },
           "ALB_SCHEME": {
             value: loadbalancerScheme
