@@ -93,16 +93,24 @@ export class CodebuildStack extends Stack {
           resources: ["*"]
         }),
         new iam.PolicyStatement({
+          sid: "ManageServiceRole",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "iam:CreateServiceLinkedRole"
+          ],
+          resources: [`arn:aws:iam::${this.account}:role/AWSServiceRoleForApplicationAutoScaling_ECSService`]
+        }),
+        new iam.PolicyStatement({
           sid: "ManageECR",
           effect: iam.Effect.ALLOW,
           actions: [
-            "ecr:GetDownloadUrlForLayer",
+            "ecr:BatchCheckLayerAvailability",
             "ecr:BatchGetImage",
             "ecr:CompleteLayerUpload",
-            "ecr:UploadLayerPart",
+            "ecr:GetDownloadUrlForLayer",
             "ecr:InitiateLayerUpload",
-            "ecr:BatchCheckLayerAvailability",
-            "ecr:PutImage"
+            "ecr:PutImage",
+            "ecr:UploadLayerPart"
           ],
           resources: [`arn:aws:ecr:${this.region}:${this.account}:repository/*`]
         }),
@@ -121,6 +129,7 @@ export class CodebuildStack extends Stack {
             "ecs:ListServices",
 				    "ecs:RegisterTaskDefinition",
             "ecs:CreateService",
+            "ecs:DescribeServices",
 				    "ecs:UpdateService"
           ],
           resources: ["*"]
@@ -179,22 +188,21 @@ export class CodebuildStack extends Stack {
           sid: "ManageEC2VPC",
           effect: iam.Effect.ALLOW,
           actions: [
-            "ec2:CreateNetworkInterface",
-            "ec2:DescribeDhcpOptions",
-            "ec2:DescribeNetworkInterfaces",
-            "ec2:DeleteNetworkInterface",
-            "ec2:DescribeSubnets",
-            "ec2:DescribeSecurityGroups",
-            "ec2:DescribeVpcs",
             "ec2:CreateTags",
             "ec2:DescribeAccountAttributes",
+            "ec2:DescribeDhcpOptions",
             "ec2:DescribeInternetGateways",
+            "ec2:DescribeNetworkInterfaces",
+            "ec2:DescribeSecurityGroups",
+            "ec2:DescribeSubnets",
+            "ec2:DescribeVpcs",
             "elasticloadbalancing:CreateListener",
             "elasticloadbalancing:CreateLoadBalancer",
+            "elasticloadbalancing:CreateTargetGroup",
             "elasticloadbalancing:DescribeListeners",
             "elasticloadbalancing:DescribeLoadBalancers",
             "elasticloadbalancing:DescribeTargetGroups",
-            "elasticloadbalancing:CreateTargetGroup"
+            "application-autoscaling:RegisterScalableTarget"
           ],
           resources: [
             "*"
@@ -217,6 +225,30 @@ export class CodebuildStack extends Stack {
               "ec2:AuthorizedService": "codebuild.amazonaws.com"
             }
           }
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageEC2NetworkInterfaceSubnet",
+          effect: iam.Effect.ALLOW,
+          actions: ["ec2:CreateNetworkInterface"],
+          resources: [
+            `arn:aws:ec2:${this.region}:${this.account}:subnet/*`
+          ]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageCloudWatch",
+          effect: iam.Effect.ALLOW,
+          actions: ["cloudwatch:DescribeAlarms"],
+          resources: [
+            `arn:aws:cloudwatch:${this.region}:${this.account}:alarm:*`
+          ]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageKMS",
+          effect: iam.Effect.ALLOW,
+          actions: ["kms:Decrypt"],
+          resources: [
+            `arn:aws:kms:${this.region}:${this.account}:key/*`
+          ]
         })
       ]
     });
@@ -237,7 +269,7 @@ export class CodebuildStack extends Stack {
 
     const albSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildAlbSecurityGroup', `${repositoryName}-${branch}-lb-sg`, vpc);
 
-    const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l4"); 
+    const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l5"); 
 
     const customBuildSpec = yaml.parse(fs.readFileSync('../configs/codebuild/customBuildSpec.yaml', 'utf8'));
     
@@ -274,41 +306,35 @@ export class CodebuildStack extends Stack {
         buildImage: buildImage,
         privileged: true,
         environmentVariables: {
-          "MAESTRO_BRANCH_OVERRIDE": {
-            value: branch
-          },
-          "ECS_SERVICE_SUBNETS": {
-            value: privateSubnetIdsString.join(",")
-          },
-          "ECS_SERVICE_SECURITY_GROUPS": {
-            value: appSecurityGroup.securityGroupId
-          },
-          "WORKLOAD_RESOURCE_TAGS": {
-            value: `Owner=${projectOwner},Project=${repositoryName},Environment=${branch},Branch=${branch}`
-          },
-          "ECS_TASK_ROLE_ARN": {
-            value: `arn:aws:iam::${this.account}:role/${projectOwner}-${repositoryName}-${branch}-service-role`
-          },
-          "ECS_EXECUTION_ROLE_ARN": {
-            value: `arn:aws:iam::${this.account}:role/ecsTaskExecutionRole-${repositoryName}-${branch}`
-          },
-          "ECS_SERVICE_TASK_PROCESSES": {
-            value: "web:2{1024;2048},console{1024;2048}"
-          },
-          "ALB_SUBNETS": {
-            value: (loadbalancerScheme == "intenal") ? privateSubnetIdsString.join(",") : publicSubnetIdsString.join(",")
-          },
           "ALB_SCHEME": {
             value: loadbalancerScheme
           },
           "ALB_SECURITY_GROUPS": {
             value: albSecurityGroup.securityGroupId
           },
-          "WORKLOAD_VPC_ID": {
-            value: vpcId
+          "ALB_SUBNETS": {
+            value: (loadbalancerScheme == "intenal") ? privateSubnetIdsString.join(",") : publicSubnetIdsString.join(",")
           },
-          "MAESTRO_NO_CACHE": {
-            value: false
+          "ECS_EFS_VOLUMES": {
+            value: efsVolumesString
+          },
+          "ECS_EXECUTION_ROLE_ARN": {
+            value: `arn:aws:iam::${this.account}:role/ecsTaskExecutionRole-${repositoryName}-${branch}`
+          },
+          "ECS_SERVICE_SECURITY_GROUPS": {
+            value: appSecurityGroup.securityGroupId
+          },
+          "ECS_SERVICE_SUBNETS": {
+            value: privateSubnetIdsString.join(",")
+          },
+          "ECS_SERVICE_TASK_PROCESSES": {
+            value: "web{1024;2048}:1-2,console{1024;2048}"
+          },
+          "ECS_TASK_ROLE_ARN": {
+            value: `arn:aws:iam::${this.account}:role/${projectOwner}-${repositoryName}-${branch}-service-role`
+          },
+          "MAESTRO_BRANCH_OVERRIDE": {
+            value: branch
           },
           "MAESTRO_CLEAR_CACHE": {
             value: false
@@ -316,8 +342,20 @@ export class CodebuildStack extends Stack {
           "MAESTRO_DEBUG": {
             value: false
           },
-          "ECS_EFS_VOLUMES": {
-            value: efsVolumesString
+          "MAESTRO_NO_CACHE": {
+            value: false
+          },
+          "MAESTRO_ONLY_BUILD": {
+            value: ""
+          },
+          "MAESTRO_SKIP_BUILD": {
+            value: ""
+          },
+          "WORKLOAD_RESOURCE_TAGS": {
+            value: `Owner=${projectOwner},Project=${repositoryName},Environment=${branch},Branch=${branch}`
+          },
+          "WORKLOAD_VPC_ID": {
+            value: vpcId
           }
         }
       },
