@@ -85,107 +85,36 @@ export class CodebuildStack extends Stack {
       managedPolicyName: `CodeBuild-${projectOwner}-${repositoryName}-${branch}`,
       statements: [
         new iam.PolicyStatement({
-          sid: "ManageRole",
+          sid: "ManageAppAutoScaling",
           effect: iam.Effect.ALLOW,
           actions: [
-            "iam:PassRole"
+            "application-autoscaling:RegisterScalableTarget",
+            "application-autoscaling:PutScalingPolicy"
           ],
           resources: ["*"]
         }),
         new iam.PolicyStatement({
-          sid: "ManageServiceRole",
+          sid: "ManageCloudwatchAlarms",
           effect: iam.Effect.ALLOW,
           actions: [
-            "iam:CreateServiceLinkedRole"
+            "cloudwatch:DescribeAlarms"
           ],
-          resources: [`arn:aws:iam::${this.account}:role/AWSServiceRoleForApplicationAutoScaling_ECSService`]
-        }),
-        new iam.PolicyStatement({
-          sid: "ManageECR",
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "ecr:BatchCheckLayerAvailability",
-            "ecr:BatchGetImage",
-            "ecr:CompleteLayerUpload",
-            "ecr:GetDownloadUrlForLayer",
-            "ecr:InitiateLayerUpload",
-            "ecr:PutImage",
-            "ecr:UploadLayerPart"
-          ],
-          resources: [`arn:aws:ecr:${this.region}:${this.account}:repository/*`]
-        }),
-        new iam.PolicyStatement({
-          sid: "GetECRAuthorizedToken",
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "ecr:GetAuthorizationToken"
-          ],
-          resources: ["*"]
-        }),
-        new iam.PolicyStatement({
-          sid: "ManagerECS",
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "ecs:ListServices",
-				    "ecs:RegisterTaskDefinition",
-            "ecs:CreateService",
-            "ecs:DescribeServices",
-				    "ecs:UpdateService"
-          ],
-          resources: ["*"]
-        }),
-        new iam.PolicyStatement({
-          sid: "ManageSecretValue",
-          effect: iam.Effect.ALLOW,
-          actions: ["secretsmanager:GetSecretValue"],
-          resources: [
-            `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*/${projectOwner}-${repositoryName}*`
-          ]
-        }),
-        new iam.PolicyStatement({
-          sid: "ManageLogsOnCloudWatch",
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "logs:CreateLogGroup",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents",
-            "logs:DescribeLogGroups"
-          ],
-          resources: [
-            `*`
-          ]
-        }),
-        new iam.PolicyStatement({
-          sid: "ManageS3Bucket",
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "s3:PutObject",
-            "s3:GetObject",
-            "s3:GetObjectVersion",
-            "s3:GetBucketAcl",
-            "s3:GetBucketLocation"
-          ],
-          resources: [
-            "arn:aws:s3:::*",
-            "arn:aws:s3:::*/*"
-          ]
+          resources: [`arn:aws:cloudwatch:${this.region}:${this.account}:alarm:*`]
         }),
         new iam.PolicyStatement({
           sid: "ManageCodebuild",
           effect: iam.Effect.ALLOW,
           actions: [
-            "codebuild:CreateReportGroup",
-            "codebuild:CreateReport",
-            "codebuild:UpdateReport",
+            "codebuild:BatchPutCodeCoverages",
             "codebuild:BatchPutTestCases",
-            "codebuild:BatchPutCodeCoverages"
+            "codebuild:CreateReport",
+            "codebuild:CreateReportGroup",
+            "codebuild:UpdateReport"
           ],
-          resources: [
-            `arn:aws:codebuild:${this.region}:${this.account}:report-group/${projectOwner}-${repositoryName}-image-build-*`
-          ]
+          resources: [`arn:aws:codebuild:${this.region}:${this.account}:report-group/${projectOwner}-${repositoryName}-image-build-*`]
         }),
         new iam.PolicyStatement({
-          sid: "ManageEC2VPC",
+          sid: "ManageEC2",
           effect: iam.Effect.ALLOW,
           actions: [
             "ec2:CreateTags",
@@ -195,21 +124,12 @@ export class CodebuildStack extends Stack {
             "ec2:DescribeNetworkInterfaces",
             "ec2:DescribeSecurityGroups",
             "ec2:DescribeSubnets",
-            "ec2:DescribeVpcs",
-            "elasticloadbalancing:CreateListener",
-            "elasticloadbalancing:CreateLoadBalancer",
-            "elasticloadbalancing:CreateTargetGroup",
-            "elasticloadbalancing:DescribeListeners",
-            "elasticloadbalancing:DescribeLoadBalancers",
-            "elasticloadbalancing:DescribeTargetGroups",
-            "application-autoscaling:RegisterScalableTarget"
+            "ec2:DescribeVpcs"
           ],
-          resources: [
-            "*"
-          ]
+          resources: ["*"]
         }),
         new iam.PolicyStatement({
-          sid: "ManageEC2NetworkInterface",
+          sid: "ManageEC2Network",
           effect: iam.Effect.ALLOW,
           actions: [
             "ec2:CreateNetworkInterface",
@@ -217,7 +137,8 @@ export class CodebuildStack extends Stack {
             "ec2:DeleteNetworkInterface"
           ],
           resources: [
-            `arn:aws:ec2:${this.region}:${this.account}:network-interface/*`
+            `arn:aws:ec2:${this.region}:${this.account}:network-interface/*`,
+            `arn:aws:ec2:${this.region}:${this.account}:subnet/*`
           ],
           conditions: {
             StringEquals: {
@@ -227,28 +148,111 @@ export class CodebuildStack extends Stack {
           }
         }),
         new iam.PolicyStatement({
-          sid: "ManageEC2NetworkInterfaceSubnet",
+          sid: "ManageECR",
           effect: iam.Effect.ALLOW,
-          actions: ["ec2:CreateNetworkInterface"],
-          resources: [
-            `arn:aws:ec2:${this.region}:${this.account}:subnet/*`
-          ]
+          actions: [
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:BatchGetImage",
+            "ecr:CompleteLayerUpload",
+            "ecr:GetAuthorizationToken",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:InitiateLayerUpload",
+            "ecr:PutImage",
+            "ecr:UploadLayerPart"
+          ],
+          resources: [`arn:aws:ecr:${this.region}:${this.account}:repository/*`]
         }),
         new iam.PolicyStatement({
-          sid: "ManageCloudWatch",
+          sid: "ManageECRAuthToken",
           effect: iam.Effect.ALLOW,
-          actions: ["cloudwatch:DescribeAlarms"],
-          resources: [
-            `arn:aws:cloudwatch:${this.region}:${this.account}:alarm:*`
-          ]
+          actions: [
+            "ecr:GetAuthorizationToken"
+          ],
+          resources: ["*"]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageECS",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "ecs:CreateService",
+            "ecs:DescribeServices",
+            "ecs:ListServices",
+            "ecs:RegisterTaskDefinition",
+            "ecs:UpdateService"
+          ],
+          resources: ["*"]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageELB",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "elasticloadbalancing:CreateListener",
+            "elasticloadbalancing:CreateLoadBalancer",
+            "elasticloadbalancing:CreateTargetGroup",
+            "elasticloadbalancing:DescribeListeners",
+            "elasticloadbalancing:DescribeLoadBalancers",
+            "elasticloadbalancing:DescribeTargetGroups"
+          ],
+          resources: ["*"]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageIAMPassRole",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "iam:PassRole"
+          ],
+          resources: ["*"]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageIAMServiceRole",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "iam:CreateServiceLinkedRole"
+          ],
+          resources: [`arn:aws:iam::${this.account}:role/AWSServiceRoleForApplicationAutoScaling_ECSService`]
         }),
         new iam.PolicyStatement({
           sid: "ManageKMS",
           effect: iam.Effect.ALLOW,
-          actions: ["kms:Decrypt"],
+          actions: [
+            "kms:Decrypt"
+          ],
+          resources: [`arn:aws:kms:${this.region}:${this.account}:key/*`]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageLogsOnCloudwatch",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:DescribeLogGroups",
+            "logs:PutLogEvents"
+          ],
+          resources: [`arn:aws:logs:${this.region}:${this.account}:*`]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageS3",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "s3:GetBucketAcl",
+            "s3:GetBucketLocation",
+            "s3:GetObject",
+            "s3:GetObjectVersion",
+            "s3:PutObject"
+          ],
           resources: [
-            `arn:aws:kms:${this.region}:${this.account}:key/*`
+            "arn:aws:s3:::*",
+            "arn:aws:s3:::*/*"
           ]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageSecretsManager",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "secretsmanager:DescribeSecret",
+            "secretsmanager:GetSecretValue"
+          ],
+          resources: [`arn:aws:secretsmanager:${this.region}:${this.account}:secret:*/${projectOwner}-${repositoryName}*`]
         })
       ]
     });

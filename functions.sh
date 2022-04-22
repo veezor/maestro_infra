@@ -14,6 +14,7 @@ create_vpc() {
     -c "VPC_NAME=$vpc_name" \
     -c "ENVIRONMENT=$environment" \
     -c "TAGS=$tags" \
+    -c "BRANCH=$repository_name" \
     --profile $aws_profile
   cd ..
 }
