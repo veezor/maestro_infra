@@ -1,0 +1,6 @@
+version: 0.2
+phases:
+  build:
+    on-failure: ABORT
+    commands:
+      - dockerd-entrypoint.sh main.sh

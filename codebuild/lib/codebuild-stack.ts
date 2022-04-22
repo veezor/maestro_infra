@@ -1,7 +1,6 @@
 import {
   Tags,
   Stack,
-  CfnOutput,
   StackProps,
   RemovalPolicy,
   aws_ecr as ecr,
@@ -11,6 +10,9 @@ import {
   aws_codebuild as codebuild,
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import * as yaml from 'yaml';
+import * as fs from 'fs';
+import { IVpc } from 'aws-cdk-lib/aws-ec2';
 
 export class CodebuildStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -21,12 +23,15 @@ export class CodebuildStack extends Stack {
     const repositoryName = this.node.tryGetContext('REPOSITORY_NAME').toLowerCase();
     const gitService = this.node.tryGetContext('GIT_SERVICE').toLowerCase();
     const projectTags = JSON.parse(this.node.tryGetContext('TAGS'));
-    const deployUserExist = this.node.tryGetContext('DEPLOY_USER_EXIST');
-    const branch = this.node.tryGetContext('REPOSITORY_BRANCH');
+    const branch = this.node.tryGetContext('BRANCH');
+    const privateSubnetIds = JSON.parse(this.node.tryGetContext('VPC_SUBNETS_PRIVATE'));
+    const publicSubnetIds = JSON.parse(this.node.tryGetContext('VPC_SUBNETS_PUBLIC'));
+    const vpcId = this.node.tryGetContext('VPC_ID');
+    const loadbalancerScheme = this.node.tryGetContext('LOADBALANCER_SCHEME');
+    const efsVolumes = JSON.parse(this.node.tryGetContext('EFS_VOLUMES'));
 
     let subnetsArns:any = [];
-    var iamDeployUser:iam.IUser;
-    
+
     Tags.of(this).add('Project', repositoryName);
 
     for (let i = 0; i < projectTags.length; i++) {
@@ -41,127 +46,99 @@ export class CodebuildStack extends Stack {
     
     var gitHubSource = codebuild.Source.gitHub({
         owner: projectOwner,
-        repo: repositoryName
+        repo: repositoryName,
+        branchOrRef: 'master-veezor'
       });
     
     if (gitService == 'bitbucket') {
       gitHubSource = codebuild.Source.bitBucket({
         owner: projectOwner,
-        repo: repositoryName
+        repo: repositoryName,
+        branchOrRef: 'master-veezor'
       });
     }
 
-    const vpc = ec2.Vpc.fromLookup(this, 'UseExistingVPC', {
-      vpcId: this.node.tryGetContext('VPC_ID')
+    const vpc = (privateSubnetIds.length > 0) ? 
+      ec2.Vpc.fromVpcAttributes(this, 'UseExistingVpc', {
+        availabilityZones: ec2.Vpc.fromLookup(this, 'GetAZsFromSubnet', { vpcId: vpcId }).availabilityZones,
+        vpcId: vpcId,
+        privateSubnetIds: privateSubnetIds,
+        publicSubnetIds: publicSubnetIds
+      }) :
+      ec2.Vpc.fromLookup(this, 'UseExistingVPC', {
+        vpcId: vpcId
+      });
+
+    const pubIds = vpc.selectSubnets({
+      subnetType: ec2.SubnetType.PUBLIC
     });
 
-    const vpcSubnets = vpc.selectSubnets({
+    const priIds = vpc.selectSubnets({
       subnetType: ec2.SubnetType.PRIVATE
     });
 
-    for (let subnet of vpcSubnets.subnets) {
-      subnetsArns.push(`arn:aws:ec2:${this.region}:${this.account}:subnet/${subnet.subnetId}`)
-    };
+    for (let subnet of priIds.subnets) {
+      subnetsArns.push(`arn:aws:ec2:${this.region}:${this.account}:subnet/${subnet.subnetId}`); 
+    }
 
     const codeBuildManagedPolicies = new iam.ManagedPolicy(this, `CreateCodeBuildPolicy`, {
       managedPolicyName: `CodeBuild-${projectOwner}-${repositoryName}-${branch}`,
       statements: [
         new iam.PolicyStatement({
-          sid: "ManageECR",
+          sid: "ManageAppAutoScaling",
           effect: iam.Effect.ALLOW,
           actions: [
-            "ecr:GetDownloadUrlForLayer",
-            "ecr:BatchGetImage",
-            "ecr:CompleteLayerUpload",
-            "ecr:UploadLayerPart",
-            "ecr:InitiateLayerUpload",
-            "ecr:BatchCheckLayerAvailability",
-            "ecr:PutImage"
-          ],
-          resources: [`arn:aws:ecr:${this.region}:${this.account}:repository/*`]
-        }),
-        new iam.PolicyStatement({
-          sid: "GetECRAuthorizedToken",
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "ecr:GetAuthorizationToken"
+            "application-autoscaling:RegisterScalableTarget",
+            "application-autoscaling:PutScalingPolicy"
           ],
           resources: ["*"]
         }),
         new iam.PolicyStatement({
-          sid: "ManageSecretValue",
-          effect: iam.Effect.ALLOW,
-          actions: ["secretsmanager:GetSecretValue"],
-          resources: [
-            `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*/${projectOwner}-${repositoryName}*`
-          ]
-        }),
-        new iam.PolicyStatement({
-          sid: "ManageLogsOnCloudWatch",
+          sid: "ManageCloudwatchAlarms",
           effect: iam.Effect.ALLOW,
           actions: [
-            "logs:CreateLogGroup",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents"
+            "cloudwatch:DescribeAlarms"
           ],
-          resources: [
-            codeBuildLogGroup.logGroupArn,
-            `${codeBuildLogGroup.logGroupArn}:*`
-          ]
-        }),
-        new iam.PolicyStatement({
-          sid: "ManageS3Bucket",
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "s3:PutObject",
-            "s3:GetObject",
-            "s3:GetObjectVersion",
-            "s3:GetBucketAcl",
-            "s3:GetBucketLocation"
-          ],
-          resources: [
-            "arn:aws:s3:::*",
-            "arn:aws:s3:::*/*"
-          ]
+          resources: [`arn:aws:cloudwatch:${this.region}:${this.account}:alarm:*`]
         }),
         new iam.PolicyStatement({
           sid: "ManageCodebuild",
           effect: iam.Effect.ALLOW,
           actions: [
-            "codebuild:CreateReportGroup",
-            "codebuild:CreateReport",
-            "codebuild:UpdateReport",
+            "codebuild:BatchPutCodeCoverages",
             "codebuild:BatchPutTestCases",
-            "codebuild:BatchPutCodeCoverages"
+            "codebuild:CreateReport",
+            "codebuild:CreateReportGroup",
+            "codebuild:UpdateReport"
           ],
-          resources: [
-            `arn:aws:codebuild:${this.region}:${this.account}:report-group/${projectOwner}-${repositoryName}-image-build-*`
-          ]
+          resources: [`arn:aws:codebuild:${this.region}:${this.account}:report-group/${projectOwner}-${repositoryName}-image-build-*`]
         }),
         new iam.PolicyStatement({
-          sid: "ManageEC2VPC",
+          sid: "ManageEC2",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "ec2:CreateTags",
+            "ec2:DescribeAccountAttributes",
+            "ec2:DescribeDhcpOptions",
+            "ec2:DescribeInternetGateways",
+            "ec2:DescribeNetworkInterfaces",
+            "ec2:DescribeSecurityGroups",
+            "ec2:DescribeSubnets",
+            "ec2:DescribeVpcs"
+          ],
+          resources: ["*"]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageEC2Network",
           effect: iam.Effect.ALLOW,
           actions: [
             "ec2:CreateNetworkInterface",
-            "ec2:DescribeDhcpOptions",
-            "ec2:DescribeNetworkInterfaces",
-            "ec2:DeleteNetworkInterface",
-            "ec2:DescribeSubnets",
-            "ec2:DescribeSecurityGroups",
-            "ec2:DescribeVpcs"
+            "ec2:CreateNetworkInterfacePermission",
+            "ec2:DeleteNetworkInterface"
           ],
           resources: [
-            "*"
-          ]
-        }),
-        new iam.PolicyStatement({
-          sid: "ManageEC2NetworkInterface",
-          effect: iam.Effect.ALLOW,
-          actions: [
-            "ec2:CreateNetworkInterfacePermission"
-          ],
-          resources: [
-            `arn:aws:ec2:${this.region}:${this.account}:network-interface/*`
+            `arn:aws:ec2:${this.region}:${this.account}:network-interface/*`,
+            `arn:aws:ec2:${this.region}:${this.account}:subnet/*`
           ],
           conditions: {
             StringEquals: {
@@ -169,6 +146,113 @@ export class CodebuildStack extends Stack {
               "ec2:AuthorizedService": "codebuild.amazonaws.com"
             }
           }
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageECR",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:BatchGetImage",
+            "ecr:CompleteLayerUpload",
+            "ecr:GetAuthorizationToken",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:InitiateLayerUpload",
+            "ecr:PutImage",
+            "ecr:UploadLayerPart"
+          ],
+          resources: [`arn:aws:ecr:${this.region}:${this.account}:repository/*`]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageECRAuthToken",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "ecr:GetAuthorizationToken"
+          ],
+          resources: ["*"]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageECS",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "ecs:CreateService",
+            "ecs:DescribeServices",
+            "ecs:ListServices",
+            "ecs:RegisterTaskDefinition",
+            "ecs:UpdateService"
+          ],
+          resources: ["*"]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageELB",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "elasticloadbalancing:CreateListener",
+            "elasticloadbalancing:CreateLoadBalancer",
+            "elasticloadbalancing:CreateTargetGroup",
+            "elasticloadbalancing:DescribeListeners",
+            "elasticloadbalancing:DescribeLoadBalancers",
+            "elasticloadbalancing:DescribeTargetGroups"
+          ],
+          resources: ["*"]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageIAMPassRole",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "iam:PassRole"
+          ],
+          resources: ["*"]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageIAMServiceRole",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "iam:CreateServiceLinkedRole"
+          ],
+          resources: [`arn:aws:iam::${this.account}:role/AWSServiceRoleForApplicationAutoScaling_ECSService`]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageKMS",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "kms:Decrypt"
+          ],
+          resources: [`arn:aws:kms:${this.region}:${this.account}:key/*`]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageLogsOnCloudwatch",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:DescribeLogGroups",
+            "logs:PutLogEvents"
+          ],
+          resources: [`arn:aws:logs:${this.region}:${this.account}:*`]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageS3",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "s3:GetBucketAcl",
+            "s3:GetBucketLocation",
+            "s3:GetObject",
+            "s3:GetObjectVersion",
+            "s3:PutObject"
+          ],
+          resources: [
+            "arn:aws:s3:::*",
+            "arn:aws:s3:::*/*"
+          ]
+        }),
+        new iam.PolicyStatement({
+          sid: "ManageSecretsManager",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "secretsmanager:DescribeSecret",
+            "secretsmanager:GetSecretValue"
+          ],
+          resources: [`arn:aws:secretsmanager:${this.region}:${this.account}:secret:*/${projectOwner}-${repositoryName}*`]
         })
       ]
     });
@@ -185,19 +269,99 @@ export class CodebuildStack extends Stack {
 
     const securityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildSecurityGroup', `${repositoryName}-${branch}-codebuild-sg`, vpc);
 
-    const builderRepository = new ecr.Repository(this, 'public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l2');
+    const appSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedAppSecurityGroup', `${repositoryName}-${branch}-app-sg`, vpc);
+
+    const albSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildAlbSecurityGroup', `${repositoryName}-${branch}-lb-sg`, vpc);
+
+    const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l5"); 
+
+    const customBuildSpec = yaml.parse(fs.readFileSync('../configs/codebuild/customBuildSpec.yaml', 'utf8'));
+    
+    var efsVolumesString = "";
+    if (efsVolumes.length >= 1) {
+      for (let i = 0; i < efsVolumes.length; i++) {
+        let parameters = ""
+        for (let p = 0; p < efsVolumes[i].parameters.length; p++) {
+          parameters = parameters.concat(";", efsVolumes[i].parameters[p]);
+        }
+        efsVolumesString = efsVolumesString.concat(efsVolumes[i].name, ":", efsVolumes[i].id, "(", efsVolumes[i].destination, parameters, ")", (i +1 < efsVolumes.length) ? "," : "" );        
+      }
+    };
+
+    var privateSubnetIdsString = [];
+    for (let subnet of priIds.subnets) {
+      privateSubnetIdsString.push(subnet.subnetId); 
+    };
+
+    var publicSubnetIdsString = [];
+    for (let subnet of pubIds.subnets) {
+      publicSubnetIdsString.push(subnet.subnetId); 
+    };
 
     new codebuild.Project(this, `CreateCodeBuildProject`, {
       projectName: `${projectOwner}-${repositoryName}-${branch}-image-build`,
       description: `Build to project ${repositoryName}, source from github, deploy to ECS fargate.`,
       badge: true,
       source: gitHubSource,
-      buildSpec: codebuild.BuildSpec.fromSourceFilename('.aws/codebuild/buildspec.yml'),
+      buildSpec: codebuild.BuildSpec.fromObjectToYaml(customBuildSpec),
       role: codeBuildProjectRole,
       securityGroups: [securityGroup],
       environment: {
-        buildImage: codebuild.LinuxBuildImage.fromEcrRepository(builderRepository),
-        privileged: true
+        buildImage: buildImage,
+        privileged: true,
+        environmentVariables: {
+          "ALB_SCHEME": {
+            value: loadbalancerScheme
+          },
+          "ALB_SECURITY_GROUPS": {
+            value: albSecurityGroup.securityGroupId
+          },
+          "ALB_SUBNETS": {
+            value: (loadbalancerScheme == "intenal") ? privateSubnetIdsString.join(",") : publicSubnetIdsString.join(",")
+          },
+          "ECS_EFS_VOLUMES": {
+            value: efsVolumesString
+          },
+          "ECS_EXECUTION_ROLE_ARN": {
+            value: `arn:aws:iam::${this.account}:role/ecsTaskExecutionRole-${repositoryName}-${branch}`
+          },
+          "ECS_SERVICE_SECURITY_GROUPS": {
+            value: appSecurityGroup.securityGroupId
+          },
+          "ECS_SERVICE_SUBNETS": {
+            value: privateSubnetIdsString.join(",")
+          },
+          "ECS_SERVICE_TASK_PROCESSES": {
+            value: "web{1024;2048}:1-2,console{1024;2048}"
+          },
+          "ECS_TASK_ROLE_ARN": {
+            value: `arn:aws:iam::${this.account}:role/${projectOwner}-${repositoryName}-${branch}-service-role`
+          },
+          "MAESTRO_BRANCH_OVERRIDE": {
+            value: branch
+          },
+          "MAESTRO_CLEAR_CACHE": {
+            value: false
+          },
+          "MAESTRO_DEBUG": {
+            value: false
+          },
+          "MAESTRO_NO_CACHE": {
+            value: false
+          },
+          "MAESTRO_ONLY_BUILD": {
+            value: ""
+          },
+          "MAESTRO_SKIP_BUILD": {
+            value: ""
+          },
+          "WORKLOAD_RESOURCE_TAGS": {
+            value: `Owner=${projectOwner},Project=${repositoryName},Environment=${branch},Branch=${branch}`
+          },
+          "WORKLOAD_VPC_ID": {
+            value: vpcId
+          }
+        }
       },
       vpc: vpc,
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER, codebuild.LocalCacheMode.SOURCE),
@@ -208,108 +372,5 @@ export class CodebuildStack extends Stack {
         }
       }
     });
-
-    if (deployUserExist == 'true') {
-      iamDeployUser = iam.User.fromUserName(this, `UseExistentDeployUser`, `${repositoryName}-build`);
-    } else {
-      iamDeployUser = new iam.User(this, `CreateBuildIAMUser`, {
-        userName: `${repositoryName}-build`,
-      });
-  
-      iamDeployUser.applyRemovalPolicy((test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN);
-  
-      iamDeployUser.attachInlinePolicy(
-        new iam.Policy(this, `appsManageS3MediaApi`, {
-          policyName: `apps-manage-s3-media-api`,
-          statements: [
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                "s3:ListBucketMultipartUploads",
-                "ecr:GetDownloadUrlForLayer",
-                "s3:ListBucket",
-                "ecr:UploadLayerPart",
-                "s3:GetBucketAcl",
-                "ecr:ListImages",
-                "s3:GetBucketPolicy",
-                "s3:ListMultipartUploadParts",
-                "ecr:PutImage",
-                "s3:PutObject",
-                "s3:GetObjectAcl",
-                "s3:GetObject",
-                "iam:PassRole",
-                "secretsmanager:GetSecretValue",
-                "s3:AbortMultipartUpload",
-                "ecr:BatchGetImage",
-                "ecr:CompleteLayerUpload",
-                "ecr:DescribeRepositories",
-                "s3:DeleteObject",
-                "s3:GetBucketLocation",
-                "ecr:InitiateLayerUpload",
-                "s3:PutObjectAcl",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:GetRepositoryPolicy",
-                "s3:PutBucketPolicy"
-              ],
-              resources: [
-                `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*`,
-                `arn:aws:iam::${this.account}:role/*`,
-                `arn:aws:ecr:${this.region}:${this.account}:repository/*`
-              ]
-            }),
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                "ecs:UpdateCluster",
-                "ecs:UpdateService",
-                "ses:*",
-                "logs:*",
-                "ecs:RegisterTaskDefinition",
-                "ecr:GetAuthorizationToken",
-                "ecs:DescribeServices",
-                "codebuild:*"
-              ],
-              resources: [
-                "*"
-              ]
-            })
-          ]
-        })
-      );
-  
-      iamDeployUser.attachInlinePolicy(
-        new iam.Policy(this, `Secretmanager`, {
-          policyName: `ManageSecretsmanager`,
-          statements: [
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                "secretsmanager:GetRandomPassword",
-                "secretsmanager:ListSecrets"
-              ],
-              resources: [
-                "*"
-              ]
-            }),
-            new iam.PolicyStatement({
-              effect: iam.Effect.ALLOW,
-              actions: [
-                "secretsmanager:*"
-              ],
-              resources: [
-                `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*`
-              ]
-            }),
-          ]
-        })
-      );
-    }
-
-    const accessKey = new iam.CfnAccessKey(this, 'myAccessKey', {
-      userName: iamDeployUser.userName,
-    });
-
-    new CfnOutput(this, 'accessKeyId', {value: accessKey.ref });
-    new CfnOutput(this, 'secretAccessKey', { value: accessKey.attrSecretAccessKey });
   }
 }

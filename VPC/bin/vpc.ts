@@ -5,7 +5,7 @@ import { VpcStack } from '../lib/vpc-stack';
 
 const app = new cdk.App();
 
-new VpcStack(app, `${app.node.tryGetContext('PROJECT_OWNER')}-${app.node.tryGetContext('ENVIRONMENT')}-MaestroVpcStack`.replace('_',"-"), {
+new VpcStack(app, `${app.node.tryGetContext('PROJECT_OWNER')}-${app.node.tryGetContext('BRANCH')}-MaestroVpcStack`.replace('_',"-"), {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */

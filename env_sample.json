@@ -1,7 +1,7 @@
 {
   "test": true,
   "environment": "staging",
-  "secrets": "{\"PORT\":3000,\"APP_NAME\":\"Maestro_Demo\",\"APP_ENV\":\"production\",\"APP_KEY\":\"base64:mTKdvsz2/Ips0hLbWFs8ZxuOtIrjYiyMpL8uupQJVvw=\",\"APP_DEBUG\":\"true\",\"LOG_CHANNEL\":\"stack\"}",
+  "secrets": "{\"PORT\":3000}",
   "repository": {
     "url": "https://github.com/veezor/veezor-demo",
     "branch": "staging"
@@ -9,13 +9,34 @@
   "vpc": {
     "name": "veezor",
     "cidr": "10.0.0.0/16",
-    "id": "vpc-a58dbcdd"
-  },
-  "tags": "[[\"owner\",\"veeezor\"],[\"environment\",\"staging\"]]",
-  "aws": {
-    "iam": {
-      "deploy_user_exist": true,
-      "app_user_exist": true
+    "id": "vpc-a58dbcdd",
+    "subnets": {
+      "private": "[\"subnet-0020a5bbd48332e48\",\"subnet-0a39391d352cc69a6\"]",
+      "public": "[\"subnet-0f8643c1901be3c84\",\"subnet-0f737e6df3dfb3b57\"]"
     }
-  }
+  },
+  "loadbalancer":{
+    "scheme": "internet-facing"
+  },
+  "efs": [
+    {
+      "name": "storage-efs",
+      "id": "fs-013a69f90df46413",
+      "destination": "/@public/images",
+      "parameters": ["encrypted","outro"]
+    },
+    {
+      "name": "imagens-efs",
+      "id": "fs-0bd8f82bba0a89448",
+      "destination": "/@public/storage",
+      "parameters": ["encrypted", "outro2", "outro3"]
+    },
+    {
+      "name": "imagens-efs",
+      "id": "fs-0bd8f82bba0a89448",
+      "destination": "/@public/storage",
+      "parameters": ["encrypted", "outro5", "outro6"]
+    }
+  ],
+  "tags": "[[\"Owner\",\"Veeezor\"],[\"Environment\",\"Staging\"]]"
 }

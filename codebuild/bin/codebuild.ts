@@ -5,7 +5,7 @@ import { CodebuildStack } from '../lib/codebuild-stack';
 
 const app = new cdk.App();
 
-const codeBuildStack = new CodebuildStack(app, `${app.node.tryGetContext('PROJECT_OWNER')}-${app.node.tryGetContext('REPOSITORY_NAME')}-MaestroCodebuildStack`.replace('_', '-'), {
+const codeBuildStack = new CodebuildStack(app, `${app.node.tryGetContext('PROJECT_OWNER')}-${app.node.tryGetContext('REPOSITORY_NAME')}-${app.node.tryGetContext('BRANCH')}-MaestroCodebuildStack`.replace('_', '-'), {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */
