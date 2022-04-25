@@ -259,7 +259,7 @@ export class CodebuildStack extends Stack {
 
     const codeBuildProjectRole = new iam.Role(this, `CreateCodeBuildProjectRole`, {
       assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
-      roleName: `${projectOwner}-${repositoryName}-${branch}-image-build-service-role`,
+      roleName: `${projectOwner}-${repositoryName}-${branch}-maestro-service`,
       path: '/service-role/',
       managedPolicies: [
         codeBuildManagedPolicies
@@ -284,7 +284,7 @@ export class CodebuildStack extends Stack {
         for (let p = 0; p < efsVolumes[i].parameters.length; p++) {
           parameters = parameters.concat(";", efsVolumes[i].parameters[p]);
         }
-        efsVolumesString = efsVolumesString.concat(efsVolumes[i].name, ":", efsVolumes[i].id, "(", efsVolumes[i].destination, parameters, ")", (i +1 < efsVolumes.length) ? "," : "" );        
+        efsVolumesString = efsVolumesString.concat(efsVolumes[i].name, ":", efsVolumes[i].id, "{", efsVolumes[i].destination, parameters, "}", (i +1 < efsVolumes.length) ? "," : "" );        
       }
     };
 

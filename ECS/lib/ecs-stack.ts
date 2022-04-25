@@ -59,7 +59,7 @@ export class EcsStack extends Stack {
     }
 
     const codeBuildProjectRole = iam.Role.fromRoleArn(this, 'UseBuildServiceRole',
-    `arn:aws:iam::${this.account}:role/service-role/${projectOwner}-${repositoryName}-${branch}-image-build-service-role`);
+    `arn:aws:iam::${this.account}:role/service-role/${projectOwner}-${repositoryName}-${branch}-maestro-service`);
 
     const executionRolePolicies = new iam.ManagedPolicy(this, `CreateExecutionRolePolicy-${branch}`, {
       managedPolicyName: `Execution-Policies-${projectOwner}-${repositoryName}-${branch}`,
