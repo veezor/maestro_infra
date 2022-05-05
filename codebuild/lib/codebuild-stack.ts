@@ -13,6 +13,8 @@ import { Construct } from 'constructs';
 import * as yaml from 'yaml';
 import * as fs from 'fs';
 import { IVpc } from 'aws-cdk-lib/aws-ec2';
+import { NONAME } from 'dns';
+import { Cache } from 'aws-cdk-lib/aws-codebuild';
 
 export class CodebuildStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -356,7 +358,6 @@ export class CodebuildStack extends Stack {
       codebuildEnvs["BRANCH"] = { value: "#{SourceVariables.BranchName}"};
     }
 
-
     new codebuild.Project(this, `CreateCodeBuildProject`, {
       projectName: `${projectOwner}-${repositoryName}-${branch}-image-build`,
       description: `Build to project ${repositoryName}, source from github, deploy to ECS fargate.`,
@@ -371,7 +372,7 @@ export class CodebuildStack extends Stack {
         environmentVariables: codebuildEnvs
       },
       vpc: vpc,
-      cache: codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER, codebuild.LocalCacheMode.SOURCE),
+      cache: codebuild.Cache.none(),
       logging: {
         cloudWatch: {
           enabled: true,
