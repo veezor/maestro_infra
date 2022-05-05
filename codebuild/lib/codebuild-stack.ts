@@ -298,6 +298,65 @@ export class CodebuildStack extends Stack {
       publicSubnetIdsString.push(subnet.subnetId); 
     };
 
+    var codebuildEnvs:any = {
+      "ALB_SCHEME": {
+        value: loadbalancerScheme
+      },
+      "ALB_SECURITY_GROUPS": {
+        value: albSecurityGroup.securityGroupId
+      },
+      "ALB_SUBNETS": {
+        value: (loadbalancerScheme == "intenal") ? privateSubnetIdsString.join(",") : publicSubnetIdsString.join(",")
+      },
+      "ECS_EFS_VOLUMES": {
+        value: efsVolumesString
+      },
+      "ECS_EXECUTION_ROLE_ARN": {
+        value: `arn:aws:iam::${this.account}:role/ecsTaskExecutionRole-${repositoryName}-${branch}`
+      },
+      "ECS_SERVICE_SECURITY_GROUPS": {
+        value: appSecurityGroup.securityGroupId
+      },
+      "ECS_SERVICE_SUBNETS": {
+        value: privateSubnetIdsString.join(",")
+      },
+      "ECS_SERVICE_TASK_PROCESSES": {
+        value: "web{1024;2048}:1-2,console{1024;2048}"
+      },
+      "ECS_TASK_ROLE_ARN": {
+        value: `arn:aws:iam::${this.account}:role/${projectOwner}-${repositoryName}-${branch}-service-role`
+      },
+      "MAESTRO_BRANCH_OVERRIDE": {
+        value: branch
+      },
+      "MAESTRO_CLEAR_CACHE": {
+        value: false
+      },
+      "MAESTRO_DEBUG": {
+        value: false
+      },
+      "MAESTRO_NO_CACHE": {
+        value: false
+      },
+      "MAESTRO_ONLY_BUILD": {
+        value: ""
+      },
+      "MAESTRO_SKIP_BUILD": {
+        value: ""
+      },
+      "WORKLOAD_RESOURCE_TAGS": {
+        value: `Owner=${projectOwner},Project=${repositoryName},Environment=${branch},Branch=${branch}`
+      },
+      "WORKLOAD_VPC_ID": {
+        value: vpcId
+      }
+    };
+
+    if ( gitService == 'bitbucket' ) {
+      codebuildEnvs["BRANCH"] = { value: "#{SourceVariables.BranchName}"};
+    }
+
+
     new codebuild.Project(this, `CreateCodeBuildProject`, {
       projectName: `${projectOwner}-${repositoryName}-${branch}-image-build`,
       description: `Build to project ${repositoryName}, source from github, deploy to ECS fargate.`,
@@ -309,59 +368,7 @@ export class CodebuildStack extends Stack {
       environment: {
         buildImage: buildImage,
         privileged: true,
-        environmentVariables: {
-          "ALB_SCHEME": {
-            value: loadbalancerScheme
-          },
-          "ALB_SECURITY_GROUPS": {
-            value: albSecurityGroup.securityGroupId
-          },
-          "ALB_SUBNETS": {
-            value: (loadbalancerScheme == "intenal") ? privateSubnetIdsString.join(",") : publicSubnetIdsString.join(",")
-          },
-          "ECS_EFS_VOLUMES": {
-            value: efsVolumesString
-          },
-          "ECS_EXECUTION_ROLE_ARN": {
-            value: `arn:aws:iam::${this.account}:role/ecsTaskExecutionRole-${repositoryName}-${branch}`
-          },
-          "ECS_SERVICE_SECURITY_GROUPS": {
-            value: appSecurityGroup.securityGroupId
-          },
-          "ECS_SERVICE_SUBNETS": {
-            value: privateSubnetIdsString.join(",")
-          },
-          "ECS_SERVICE_TASK_PROCESSES": {
-            value: "web{1024;2048}:1-2,console{1024;2048}"
-          },
-          "ECS_TASK_ROLE_ARN": {
-            value: `arn:aws:iam::${this.account}:role/${projectOwner}-${repositoryName}-${branch}-service-role`
-          },
-          "MAESTRO_BRANCH_OVERRIDE": {
-            value: branch
-          },
-          "MAESTRO_CLEAR_CACHE": {
-            value: false
-          },
-          "MAESTRO_DEBUG": {
-            value: false
-          },
-          "MAESTRO_NO_CACHE": {
-            value: false
-          },
-          "MAESTRO_ONLY_BUILD": {
-            value: ""
-          },
-          "MAESTRO_SKIP_BUILD": {
-            value: ""
-          },
-          "WORKLOAD_RESOURCE_TAGS": {
-            value: `Owner=${projectOwner},Project=${repositoryName},Environment=${branch},Branch=${branch}`
-          },
-          "WORKLOAD_VPC_ID": {
-            value: vpcId
-          }
-        }
+        environmentVariables: codebuildEnvs
       },
       vpc: vpc,
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER, codebuild.LocalCacheMode.SOURCE),
