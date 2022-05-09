@@ -183,10 +183,10 @@ validate_env_file() {
       printf "and the branch key "
 
       repository_branch_value=$(cat $json_file | jq '.repository.branch')
-      if [[ $repository_branch_value = \"production\" ]] || [[ $repository_branch_value = \"staging\" ]]; then
+      if [[ $repository_branch_value = \"production\" ]] || [[ $repository_branch_value = \"staging\" ]] || [[ $repository_branch_value = \"dev\" ]]; then
         echo "with value: $repository_branch_value - OK"
       else
-        echo "with no valid value, acceptable value is ('production'|'staging') - FAIL"
+        echo "with no valid value, acceptable value is ('production'|'staging'|'dev') - FAIL"
         exit 0
       fi
     else
