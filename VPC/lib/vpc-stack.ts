@@ -37,31 +37,9 @@ export class VpcStack extends Stack {
         {
           cidrMask: 24,
           name: `private`,
-          subnetType: ec2.SubnetType.PRIVATE,
-        },
-        // {
-        //   cidrMask: 24,
-        //   name: `isolated`,
-        //   subnetType: ec2.SubnetType.ISOLATED,
-        // },
+          subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+        }
       ]
-    });
-
-    const flowlogGroup = new logs.LogGroup(this, 'CreateVPCCustomLogGroup', {
-      logGroupName: `${vpcName}-vpc-loggroup`,
-      removalPolicy: (test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN
-    });
-
-    const vpcFlowLogRole = new iam.Role(this, 'VPCCustomRole', {
-      assumedBy: new iam.ServicePrincipal('vpc-flow-logs.amazonaws.com'),
-      description: 'Created by Veezor, used for fargate projects.',
-      roleName: `${vpcName}-vpc-role`,
-    });
-    vpcFlowLogRole.applyRemovalPolicy((test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN);
-
-    new ec2.FlowLog(this, 'VPCFlowLog', {
-      resourceType: ec2.FlowLogResourceType.fromVpc(vpc),
-      destination: ec2.FlowLogDestination.toCloudWatchLogs(flowlogGroup, vpcFlowLogRole)
     });
 
     new CfnOutput(this, 'VpcId', { value: vpc.vpcId });

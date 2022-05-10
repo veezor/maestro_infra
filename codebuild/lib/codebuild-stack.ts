@@ -12,9 +12,6 @@ import {
 import { Construct } from 'constructs';
 import * as yaml from 'yaml';
 import * as fs from 'fs';
-import { IVpc } from 'aws-cdk-lib/aws-ec2';
-import { NONAME } from 'dns';
-import { Cache } from 'aws-cdk-lib/aws-codebuild';
 
 export class CodebuildStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
