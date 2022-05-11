@@ -73,7 +73,7 @@ export class CodebuildStack extends Stack {
     });
 
     const priIds = vpc.selectSubnets({
-      subnetType: ec2.SubnetType.PRIVATE
+      subnetType: ec2.SubnetType.PRIVATE_WITH_NAT
     });
 
     for (let subnet of priIds.subnets) {
