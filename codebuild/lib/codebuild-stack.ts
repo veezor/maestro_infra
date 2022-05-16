@@ -266,6 +266,15 @@ export class CodebuildStack extends Stack {
     });
     codeBuildProjectRole.applyRemovalPolicy((test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN);
 
+    // Role to be used wen scheduled tasks is needed on the project
+    new iam.Role(this, `CreateScheduledTaskRole`, {
+      assumedBy: new iam.ServicePrincipal('events.amazonaws.com'),
+      roleName: 'ecsEventsRole',
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonEC2ContainerServiceEventsRole")
+      ]
+    });
+
     const securityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildSecurityGroup', `${repositoryName}-${branch}-codebuild-sg`, vpc);
 
     const appSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedAppSecurityGroup', `${repositoryName}-${branch}-app-sg`, vpc);
