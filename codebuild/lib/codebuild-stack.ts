@@ -88,7 +88,8 @@ export class CodebuildStack extends Stack {
           effect: iam.Effect.ALLOW,
           actions: [
             "application-autoscaling:RegisterScalableTarget",
-            "application-autoscaling:PutScalingPolicy"
+            "application-autoscaling:PutScalingPolicy",
+            "application-autoscaling:DescribeScalingPolicies"
           ],
           resources: ["*"]
         }),
