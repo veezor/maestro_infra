@@ -65,24 +65,24 @@ create_sgs() {
   read -p "Enter VPC ID [$vpc_id_env]: " vpc_id
   vpc_id=${vpc_id:-$vpc_id_env}
 
-  aws ec2 create-security-group \
-    --tag-specifications $aws_cli_tags \
-    --group-name "${repository_name,,}-${repository_branch}-app-sg" \
-    --description 'APP SG' \
-    --vpc-id $vpc_id \
-    --profile $aws_profile
+  # aws ec2 create-security-group \
+  #   --tag-specifications $aws_cli_tags \
+  #   --group-name "${repository_name,,}-${repository_branch}-app-sg" \
+  #   --description 'APP SG' \
+  #   --vpc-id $vpc_id \
+  #   --profile $aws_profile
   aws ec2 create-security-group \
     --tag-specifications $aws_cli_tags \
     --group-name "${repository_name,,}-${repository_branch}-codebuild-sg" \
     --description 'CODEBUILD SG' \
     --vpc-id $vpc_id \
     --profile $aws_profile
-  aws ec2 create-security-group \
-    --tag-specifications $aws_cli_tags \
-    --group-name "${repository_name,,}-${repository_branch}-lb-sg" \
-    --description 'LOADBALANCER SG' \
-    --vpc-id $vpc_id \
-    --profile $aws_profile
+  # aws ec2 create-security-group \
+  #   --tag-specifications $aws_cli_tags \
+  #   --group-name "${repository_name,,}-${repository_branch}-lb-sg" \
+  #   --description 'LOADBALANCER SG' \
+  #   --vpc-id $vpc_id \
+  #   --profile $aws_profile
 }
 
 update_code() {

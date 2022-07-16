@@ -124,7 +124,10 @@ export class CodebuildStack extends Stack {
             "ec2:DescribeNetworkInterfaces",
             "ec2:DescribeSecurityGroups",
             "ec2:DescribeSubnets",
-            "ec2:DescribeVpcs"
+            "ec2:DescribeVpcs",
+            "ec2:AuthorizeSecurityGroupIngress",
+            "ec2:CreateSecurityGroup",
+            "ec2:DescribeSubnets"
           ],
           resources: ["*"]
         }),
@@ -276,9 +279,9 @@ export class CodebuildStack extends Stack {
 
     const securityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildSecurityGroup', `${repositoryName}-${branch}-codebuild-sg`, vpc);
 
-    const appSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedAppSecurityGroup', `${repositoryName}-${branch}-app-sg`, vpc);
+    // const appSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedAppSecurityGroup', `${repositoryName}-${branch}-app-sg`, vpc);
 
-    const albSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildAlbSecurityGroup', `${repositoryName}-${branch}-lb-sg`, vpc);
+    // const albSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildAlbSecurityGroup', `${repositoryName}-${branch}-lb-sg`, vpc);
 
     const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l5"); 
 
@@ -309,9 +312,6 @@ export class CodebuildStack extends Stack {
       "ALB_SCHEME": {
         value: loadbalancerScheme
       },
-      "ALB_SECURITY_GROUPS": {
-        value: albSecurityGroup.securityGroupId
-      },
       "ALB_SUBNETS": {
         value: (loadbalancerScheme == "intenal") ? privateSubnetIdsString.join(",") : publicSubnetIdsString.join(",")
       },
@@ -320,9 +320,6 @@ export class CodebuildStack extends Stack {
       },
       "ECS_EXECUTION_ROLE_ARN": {
         value: `arn:aws:iam::${this.account}:role/ecsTaskExecutionRole-${repositoryName}-${branch}`
-      },
-      "ECS_SERVICE_SECURITY_GROUPS": {
-        value: appSecurityGroup.securityGroupId
       },
       "ECS_SERVICE_SUBNETS": {
         value: privateSubnetIdsString.join(",")
