@@ -127,7 +127,8 @@ export class CodebuildStack extends Stack {
             "ec2:DescribeVpcs",
             "ec2:AuthorizeSecurityGroupIngress",
             "ec2:CreateSecurityGroup",
-            "ec2:DescribeSubnets"
+            "ec2:DescribeSubnets",
+            "ec2:DescribeSecurityGroupRules"
           ],
           resources: ["*"]
         }),

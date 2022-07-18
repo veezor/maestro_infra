@@ -25,6 +25,19 @@ create_codebuild() {
   vpc_id=${vpc_id:-$vpc_id_env}
   
   cd codebuild
+  cdk diff -c "TEST=$test" \
+    -c "VPC_ID=$vpc_id" \
+    -c "BRANCH=$repository_branch" \
+    -c "PROJECT_OWNER=$project_owner" \
+    -c "REPOSITORY_NAME=$repository_name" \
+    -c "GIT_SERVICE=$git_service" \
+    -c "TAGS=$tags" \
+    -c "VPC_SUBNETS_PRIVATE"=$vpc_subnets_private \
+    -c "VPC_SUBNETS_PUBLIC"=$vpc_subnets_public \
+    -c "LOADBALANCER_SCHEME"=$loadbalancer_scheme \
+    -c "EFS_VOLUMES"=$efs_volumes \
+    --profile $aws_profile
+
   cdk deploy -c "TEST=$test" \
     -c "VPC_ID=$vpc_id" \
     -c "BRANCH=$repository_branch" \
