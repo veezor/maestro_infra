@@ -47,9 +47,9 @@ create_sgs() {
   read -p "Enter VPC ID [$vpc_id_env]: " vpc_id
   vpc_id=${vpc_id:-$vpc_id_env}
   
-  security_group_sulfixes=['app-sg', 'codebuild-sg', 'lb-sg']
+  security_group_sulfixes=('app-sg' 'codebuild-sg' 'lb-sg')
 
-  for sg_sulfix in "${security_group_sulfixes[@]}" do
+  for sg_sulfix in "${security_group_sulfixes[@]}"; do
     aws ec2 create-security-group \
       --tag-specifications $aws_cli_tags \
       --group-name "${repository_name,,}-${repository_branch}-${sg_sulfix}" \
