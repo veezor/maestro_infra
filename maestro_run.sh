@@ -79,7 +79,7 @@ else
 fi
 while true; do
 PS3='Please enter your choice: '
-options=("Git_Update" "NPM_Update" "Bootstrap" "VPC" "Codebuild" "ECS" "Quit")
+options=("Git_Update" "NPM_Update" "Bootstrap" "VPC" "Maestro_infra")
 select opt in "${options[@]}"
 do
   case $opt in
@@ -102,28 +102,10 @@ do
       create_vpc
       break
       ;;
-    "Codebuild")
+    "Maestro_infra")
       echo "Codebuild will be created"
       create_sgs
       create_codebuild
-      break
-      ;;
-    "ECS")
-      echo "ECS will be created"
-      create_ecs
-      break
-      ;;
-    "Codebuild_ECS")
-      echo "Codebuild and ECS will be created"
-      create_codebuild
-      create_ecs
-      break
-      ;;
-    "ALL")
-      echo "VPC, Codebuild and ECS will be created"
-      create_vpc
-      create_codebuild
-      create_ecs
       break
       ;;
     "Quit")

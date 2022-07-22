@@ -25,10 +25,12 @@ create_codebuild() {
   vpc_id=${vpc_id:-$vpc_id_env}
   
   cd codebuild
-  cdk deploy -c "TEST=$test" \
+  cdk deploy \
+    -c "TEST=$test" \
     -c "VPC_ID=$vpc_id" \
     -c "BRANCH=$repository_branch" \
     -c "PROJECT_OWNER=$project_owner" \
+    -c "PROJECT_SECRETS=$secrets" \
     -c "REPOSITORY_NAME=$repository_name" \
     -c "GIT_SERVICE=$git_service" \
     -c "TAGS=$tags" \
@@ -40,49 +42,21 @@ create_codebuild() {
   cd ..
 }
 
-create_ecs() {
-  vpc_id_env=$(cat $json_file | jq -r '.vpc.id')
-  read -p "Enter VPC ID [$vpc_id_env]: " vpc_id
-  vpc_id=${vpc_id:-$vpc_id_env}
-
-  cd ECS
-  cdk deploy \
-    -c "PROJECT_OWNER=$project_owner" \
-    -c "REPOSITORY_NAME=$repository_name" \
-    -c "BRANCH=$repository_branch" \
-    -c "VPC_ID=$vpc_id" \
-    -c "PROJECT_SECRETS=$secrets" \
-    -c "TEST=$test" \
-    -c "TAGS=$tags" \
-    -c "VPC_SUBNETS_PRIVATE"=$vpc_subnets_private \
-    -c "VPC_SUBNETS_PUBLIC"=$vpc_subnets_public \
-    --profile $aws_profile
-  cd ..
-}
-
 create_sgs() {
   vpc_id_env=$(cat $json_file | jq -r '.vpc.id')
   read -p "Enter VPC ID [$vpc_id_env]: " vpc_id
   vpc_id=${vpc_id:-$vpc_id_env}
+  
+  security_group_sulfixes=['app-sg', 'codebuild-sg', 'lb-sg']
 
-  aws ec2 create-security-group \
-    --tag-specifications $aws_cli_tags \
-    --group-name "${repository_name,,}-${repository_branch}-app-sg" \
-    --description 'APP SG' \
-    --vpc-id $vpc_id \
-    --profile $aws_profile
-  aws ec2 create-security-group \
-    --tag-specifications $aws_cli_tags \
-    --group-name "${repository_name,,}-${repository_branch}-codebuild-sg" \
-    --description 'CODEBUILD SG' \
-    --vpc-id $vpc_id \
-    --profile $aws_profile
-  aws ec2 create-security-group \
-    --tag-specifications $aws_cli_tags \
-    --group-name "${repository_name,,}-${repository_branch}-lb-sg" \
-    --description 'LOADBALANCER SG' \
-    --vpc-id $vpc_id \
-    --profile $aws_profile
+  for sg_sulfix in "${security_group_sulfixes[@]}" do
+    aws ec2 create-security-group \
+      --tag-specifications $aws_cli_tags \
+      --group-name "${repository_name,,}-${repository_branch}-${sg_sulfix}" \
+      --description "${sg_sulfix^^}" \
+      --vpc-id $vpc_id \
+      --profile $aws_profile
+  done
 }
 
 update_code() {
@@ -97,8 +71,6 @@ update_npm() {
   cd ../VPC
   npm install
   cd ../codebuild
-  npm install
-  cd ../ECS
   npm install
   cd ../RDS
   npm install
