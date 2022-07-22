@@ -79,7 +79,7 @@ else
 fi
 while true; do
 PS3='Please enter your choice: '
-options=("Git_Update" "NPM_Update" "Bootstrap" "VPC" "Maestro_infra")
+options=("Git_Update" "NPM_Update" "Bootstrap" "VPC" "Maestro_infra" "Quit")
 select opt in "${options[@]}"
 do
   case $opt in

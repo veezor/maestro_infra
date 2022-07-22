@@ -506,7 +506,8 @@ export class CodebuildStack extends Stack {
       description: `Used to project ${repositoryName}-${branch}`,
       removalPolicy: test=='true' ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
       generateSecretString: {
-        secretStringTemplate: JSON.stringify(projectSecrets)
+        secretStringTemplate: JSON.stringify(projectSecrets),
+        generateStringKey: 'random'
       }
     });
 
