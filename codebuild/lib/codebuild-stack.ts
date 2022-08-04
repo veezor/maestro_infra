@@ -221,7 +221,10 @@ export class CodebuildStack extends Stack {
           actions: [
             "iam:CreateServiceLinkedRole"
           ],
-          resources: [`arn:aws:iam::${this.account}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService`]
+          resources: [
+            `arn:aws:iam::${this.account}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService`,
+            `arn:aws:iam::${this.account}:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing`
+          ]
         }),
         new iam.PolicyStatement({
           sid: "ManageKMS",
