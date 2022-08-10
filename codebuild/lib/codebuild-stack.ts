@@ -523,9 +523,11 @@ export class CodebuildStack extends Stack {
       removalPolicy: test=='true' ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN
     });
 
+    // capacity provider
     new ecs.Cluster(this, `CreateCluster-${branch}`, {
       clusterName: `${projectOwner}-${repositoryName}-${branch}`,
-      vpc: vpc
+      vpc: vpc,
+      enableFargateCapacityProviders: true
     });
   }
 }
