@@ -457,6 +457,17 @@ export class CodebuildStack extends Stack {
           resources: ['*']
         }),
         new iam.PolicyStatement({
+          sid: "manageEvents",
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "events:PutRule",
+            "events:PutTargets"
+          ],
+          resources: [
+            `arn:aws:events:${this.region}:${this.account}:rule/*`
+          ]
+        }),
+        new iam.PolicyStatement({
           sid: "ManageS3Bucket",
           effect: iam.Effect.ALLOW,
           actions: [
