@@ -351,9 +351,6 @@ export class CodebuildStack extends Stack {
       "MAESTRO_BRANCH_OVERRIDE": {
         value: branch
       },
-      "MAESTRO_CLEAR_CACHE": {
-        value: false
-      },
       "MAESTRO_DEBUG": {
         value: false
       },
