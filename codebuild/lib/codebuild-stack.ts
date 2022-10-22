@@ -187,7 +187,9 @@ export class CodebuildStack extends Stack {
           effect: iam.Effect.ALLOW,
           actions: [
             "ecs:CreateService",
+            "ecs:CreateCluster",
             "ecs:DescribeServices",
+            "ecs:DescribeClusters",
             "ecs:ListServices",
             "ecs:RegisterTaskDefinition",
             "ecs:UpdateService"
