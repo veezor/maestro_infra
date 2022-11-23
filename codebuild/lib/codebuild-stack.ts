@@ -187,7 +187,9 @@ export class CodebuildStack extends Stack {
           effect: iam.Effect.ALLOW,
           actions: [
             "ecs:CreateService",
+            "ecs:CreateCluster",
             "ecs:DescribeServices",
+            "ecs:DescribeClusters",
             "ecs:ListServices",
             "ecs:RegisterTaskDefinition",
             "ecs:UpdateService"
@@ -529,13 +531,6 @@ export class CodebuildStack extends Stack {
     const ecrRepository = new ecr.Repository(this, `CreateNewECRRepository-${branch}`, {
       repositoryName: `${projectOwner}-${repositoryName}-${branch}`,
       removalPolicy: test=='true' ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN
-    });
-
-    // capacity provider
-    new ecs.Cluster(this, `CreateCluster-${branch}`, {
-      clusterName: `${projectOwner}-${repositoryName}-${branch}`,
-      vpc: vpc,
-      enableFargateCapacityProviders: true
     });
   }
 }
