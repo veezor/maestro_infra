@@ -20,6 +20,7 @@ export class CodebuildStack extends Stack {
     super(scope, id, props);
 
     const test = this.node.tryGetContext('TEST');
+    let repositoryUrl = this.node.tryGetContext('REPOSITORY_URL');
     const projectOwner = this.node.tryGetContext('PROJECT_OWNER').toLowerCase();
     const repositoryName = this.node.tryGetContext('REPOSITORY_NAME').toLowerCase();
     const gitService = this.node.tryGetContext('GIT_SERVICE').toLowerCase();
@@ -66,17 +67,17 @@ export class CodebuildStack extends Stack {
       removalPolicy: (test=='true') ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN
     });
     
-    var gitHubSource = codebuild.Source.gitHub({
+    var gitSource = codebuild.Source.gitHub({
         owner: projectOwner,
         repo: repositoryName,
-        branchOrRef: 'master-veezor'
+        branchOrRef: branch
       });
     
     if (gitService == 'bitbucket') {
-      gitHubSource = codebuild.Source.bitBucket({
+      gitSource = codebuild.Source.bitBucket({
         owner: projectOwner,
         repo: repositoryName,
-        branchOrRef: 'master-veezor'
+        branchOrRef: branch
       });
     }
 
@@ -121,7 +122,8 @@ export class CodebuildStack extends Stack {
             "codebuild:BatchPutTestCases",
             "codebuild:CreateReport",
             "codebuild:CreateReportGroup",
-            "codebuild:UpdateReport"
+            "codebuild:UpdateReport",
+            "codebuild:BatchGetBuilds"
           ],
           resources: [`arn:aws:codebuild:${this.region}:${this.account}:report-group/${projectOwner}-${repositoryName}-image-build-*`]
         }),
@@ -243,7 +245,8 @@ export class CodebuildStack extends Stack {
             "logs:CreateLogGroup",
             "logs:CreateLogStream",
             "logs:DescribeLogGroups",
-            "logs:PutLogEvents"
+            "logs:PutLogEvents",
+            "logs:TagResource"
           ],
           resources: [`arn:aws:logs:${this.region}:${this.account}:*`]
         }),
@@ -297,7 +300,7 @@ export class CodebuildStack extends Stack {
 
     const albSecurityGroup = ec2.SecurityGroup.fromLookupByName(this, 'ImportedCodeBuildAlbSecurityGroup', `${repositoryName}-${branch}-lb-sg`, vpc);
 
-    const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/aws-codebuild-cloud-native-buildpacks:l5"); 
+    const buildImage = codebuild.LinuxBuildImage.fromDockerRegistry("public.ecr.aws/h4u2q3r3/maestro:1.2.1"); 
 
     const customBuildSpec = yaml.parse(fs.readFileSync('../configs/codebuild/customBuildSpec.yaml', 'utf8'));
     
@@ -377,11 +380,11 @@ export class CodebuildStack extends Stack {
       codebuildEnvs["BRANCH"] = { value: "#{SourceVariables.BranchName}"};
     }
 
-    new codebuild.Project(this, `CreateCodeBuildProject`, {
+    var codebuildProjectStructure: any = {};
+    codebuildProjectStructure = {
       projectName: `${projectOwner}-${repositoryName}-${branch}-image-build`,
       description: `Build to project ${repositoryName}, source from github, deploy to ECS fargate.`,
       badge: true,
-      source: gitHubSource,
       buildSpec: codebuild.BuildSpec.fromObjectToYaml(customBuildSpec),
       role: codeBuildProjectRole,
       securityGroups: [securityGroup],
@@ -398,7 +401,14 @@ export class CodebuildStack extends Stack {
           logGroup: codeBuildLogGroup
         }
       }
-    });
+    };
+
+    if (gitService != 'bitbucket') {
+      codebuildProjectStructure.source = gitSource;
+      codebuildProjectStructure.badge = false;
+    };
+
+    new codebuild.Project(this, `CreateCodeBuildProject`, codebuildProjectStructure);
 
     const executionRolePolicies = new iam.ManagedPolicy(this, `CreateExecutionRolePolicy-${branch}`, {
       managedPolicyName: `Execution-Policies-${projectOwner}-${repositoryName}-${branch}`,
