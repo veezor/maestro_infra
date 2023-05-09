@@ -30,12 +30,12 @@ export class VpcStack extends Stack {
       natGateways: 1,
       subnetConfiguration: [
         {
-          cidrMask: 24,
+          cidrMask: 26,
           name: `public`,
           subnetType: ec2.SubnetType.PUBLIC,
         },
         {
-          cidrMask: 24,
+          cidrMask: 26,
           name: `private`,
           subnetType: ec2.SubnetType.PRIVATE_WITH_NAT,
         }
