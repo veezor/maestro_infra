@@ -35,11 +35,12 @@ while (( "$#" )); do
   esac
 done
  
-re_repository_url="(github|bitbucket)(.com|.org)[\/]([^\/]+)[\/]([^\/.]+)"
+re_repository_url="(github|bitbucket|codecommit)(.com|.org|.*amazonaws.com\/v1)([\/]([^\/]+)[\/]([^\/.]+))"
 re_cidr="^([0-9]{1,3}\.){3}[0-9]{1,3}($|/(16|24))$"
 
 validate_env_file
 
+account_name=$(cat $json_file | jq -r '.account.name')
 test=$(cat $json_file | jq -r '.test')
 tags=$(cat $json_file | jq -r '.tags')
 secrets=$(cat $json_file | jq -r '.secrets')
@@ -71,12 +72,17 @@ aws_cli_tags+="]"
 
 if [[ $repository_url =~ $re_repository_url ]]; then
   git_service=${BASH_REMATCH[1]}
-  project_owner=${BASH_REMATCH[3]}
-  repository_name=${BASH_REMATCH[4]}
+  project_owner=${BASH_REMATCH[4]}
+  repository_name=${BASH_REMATCH[5]}
 else
   echo "Repository url not valid. Try again."
   exit 0
 fi
+
+if [[ $git_service == 'codecommit' ]]; then
+  project_owner=$account_name
+fi
+
 while true; do
 PS3='Please enter your choice: '
 options=("Git_Update" "NPM_Update" "Bootstrap" "VPC" "Maestro_infra" "Quit")
