@@ -26,6 +26,7 @@ create_codebuild() {
   
   cd codebuild
   cdk deploy \
+    -c "REPOSITORY_URL=$repository_url" \
     -c "TEST=$test" \
     -c "VPC_ID=$vpc_id" \
     -c "BRANCH=$repository_branch" \
@@ -79,7 +80,8 @@ update_npm() {
 }
 
 validate_env_file() {
-  re_repository_url="(github|bitbucket)(.com|.org)[\/]([^\/]+)[\/]([^\/.]+)"
+  re_repository_url="(github|bitbucket|codecommit)(.com|.org|.*amazonaws.com\/v1)([\/]([^\/]+)[\/]([^\/.]+))"
+  re_account_name="([a-z]|[0-9]|[-])"
   re_vpc_cidr="^([01]?\d\d?|2[0-4]\d|25[0-5])(?:\.[01]?\d\d?|\.2[0-4]\d|\.25[0-5]){3}(\/[0-2]\d|\/3[0-2])$"
   re_vpc_id="^(vpc-)+[a-z0-9]*$"
 
@@ -127,6 +129,30 @@ validate_env_file() {
     echo "with value: $secrets_value - OK"
   else
     echo "not found - Fix it and try again."
+    exit 0
+  fi
+
+  has_account=$(cat $json_file | jq 'has("account")')
+  printf "Key Account "
+  if [ $has_account == true ]; then
+    printf "found, "
+    has_account_name=$(cat $json_file | jq '.account' | jq 'has("name")' )
+    printf "and key name "
+
+    if [ $has_account_name == true ]; then
+      account_name=$(cat $json_file | jq '.account.name')
+      if [[ $account_name =~ $re_account_name ]]; then
+        echo "with value: $account_name - OK"
+      else
+        echo "with no valid value, acceptable value is a alphanumeric and hyphen - FAIL"
+        exit 0
+      fi
+    else
+      echo "is not found - FAIL"
+      exit 0
+    fi
+  else
+    echo "is not found - FAIL"
     exit 0
   fi
 
