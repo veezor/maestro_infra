@@ -207,6 +207,7 @@ export class CodebuildStack extends Stack {
             "elasticloadbalancing:CreateTargetGroup",
             "elasticloadbalancing:DescribeListeners",
             "elasticloadbalancing:DescribeLoadBalancers",
+            "elasticloadbalancing:AddTags",
             "elasticloadbalancing:DescribeTargetGroups"
           ],
           resources: ["*"]
