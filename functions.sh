@@ -73,8 +73,6 @@ update_npm() {
   npm install
   cd ../codebuild
   npm install
-  cd ../RDS
-  npm install
   cd ..
   echo All NPM dependencies installed.
 }
