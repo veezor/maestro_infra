@@ -6,96 +6,64 @@
 
 Criar um arquivo `.json` usando como base o arquivo `env_sample.json`, alterando de acordo com as informações do projeto que será executado.
 
+Estrutura do arquivo `env_sample.json
+
+{
+  "test": false, // false - facilita na remoção dos recursos, caso seja um ambiente temporário.
+                 // true - Ativa uma flag nos recursos que dificulta a deleção acidental. Ambiente de produção, ou 
+                 // ambientes permanentes.
+  "environment": "staging", // valores aceitáveis ('production'|'staging'|'development'|'prod'|'stag'|'dev')
+  "secrets": "{\"PORT\":3000}", // Pode conter as variáveis de amiente do projeto, para serem escritas no Secret Manager.
+                                // PORT=3000 é obrigatório
+  "account": {
+    "name": "NomeDaContaAWS" // Um nome qualquer que identifique a conta AWS que está recebendo o ambiente
+  },
+  "repository": {
+    "url": "https://github.com/veezor/static_site", // Repositório do projeto a ser executado, bitbucket,
+                                                    // github, codecommit são URLs compativéis.
+    "branch": "development" // Nome da branch a ser utilizada. Podendo ser um nome ficticio, pois o ambiente
+                            // utilizara esse campo para nomear os recursos criados.
+  },
+  "vpc": {
+    "name": "veezor-prod", // Opcional. Caso já possua uma VPC criada na conta e que queira reutiliza-la.
+                           // Caso queira criar uma nova VPC, será criada com o nome inserido nesse campo.
+    "cidr": "10.0.0.0/16", // Obrigatório. CIDR que deverá ser utilizada
+    "id": "vpc-0cbbf8d9ff57739e7", // Opcional. Caso já possua uma VPC criada, e queira reutiliza-la, esse campo é
+                                   // obrigatório, e deve conter o ID da VPC ã ser utilizada.
+                                   // Caso contrário, esse campo deve estar vazio.
+    "subnets": {
+      "private": "[]", // Opcional. Somente utilizado no caso da VPC já existir, e queira utilizar certas subnets
+                       // privadas para o projeto.
+      "public": "[]"   // Opcional. Somente utilizado no caso da VPC já existir, e queira utilizar certas subnets
+                       // publicas para o projeto.
+    }
+  },
+  "loadbalancer":{
+    "scheme": "internet-facing" // Obrigatório
+  },
+  "efs": [], // Utilizado para montar EFSs adicionais nos containers. Doocumentação precisa ser atualizada.
+  "tags": "[[\"Owner\",\"OAntagonista\"],[\"Environment\",\"Development\"],[\"Project\", \"oantagonista\"]]"
+}
+
+> **Para todas as execuções de script desta documentação, pode-se complementar o comando com a instrução** <br> `--profile <AWS Account>` **caso o AWS-CLI esteja configurado na máquina com a utilização de profiles.** <br>
+
 Executar o comando a seguir e seguir as instruções. <br>
 ``` bash
- $ ./maestro_run.sh --env-file env_sample.json --profile buildpacks
+ $ ./maestro_run.sh --env-file env_sample.json
 ```
 Caso necessário, dê permissões para executar o .sh com o comando: <br>
 ``` bash
  $ chmod +x maestro_run.sh
 ```
 
-
-### Via CDK
-
-Lembrar de rodar `npm install` para instalar as bibliotecas de typescript.
-
-
-#### Primeiros comandos em uma nova conta AWS
-
-Caso a conta AWS nunca tenha rodado um CloudFormation via CDK, precisa rodar este comando antes de iniciar o provisionamento das redes e dos workloads:
-``` bash
-$ cdk bootstrap
-```
-
-> **Para todas as execuções dos CDK’s desta documentação, pode-se complementar o comando com a instrução** <br> `--profile <AWS Account>` **caso o AWS-CLI esteja configurado na máquina.** <br>
-
-
-#### Criação da VPC e recursos de rede
-
-Para criar a estrutura básica de redes, precisamos rodar o seguinte comando:
-
-``` bash
-$ cdk deploy \
-  -c 'PROJECT_OWNER=MaestroProduction' \
-  -c ‘ENVIRONMENT=staging’ \
-  -c 'VPC_CIDR=10.0.0.0/16' \
-  -c 'TEST=true' \
-  -c 'VPC_NAME=maestro'
-```
-
-Variável | Descrição
----------|-----------
-`STACK_NAME` | Nome do cloudformation, deve ser único na conta
-`VPC_CIDR` | Roteamento entre domínios
-`TEST` | Desabilita a proteção contra deleção de recurso, não utilizar em produção
-`VPC_NAME` | Nome da VPC (será concatenado com `STACK_NAME`)
-
-
-#### Criação dos recursos computacionais
-
-Para criar os recursos computacionais do workload, precisamos rodar o seguinte comando:
-
-``` bash
-# CODEBUILD
-$ cdk deploy \
-  -c 'TEST=true' \
-  -c 'VPC_ID=vpc-a58dbcdd' \
-  -c 'PROJECT_OWNER=veezor' \
-  -c 'REPOSITORY_NAME=veezor-demo' \
-  -c ‘GIT_SERVICE=github’
-```
-
-**Não aceita underlines (_)**
-
-Variável | Descrição
----------|-----------
-`TEST` | Desabilita a proteção contra deleção de recurso, não utilizar em produção
-`VPC_ID` | Identificador da VPC, será entregue no output final da execução do CDK da VPC (Passo anterior)
-`PROJECT_OWNER` | Dono do repositório GIT <br> Ex.: _github.com/veezor/veezor-demo_
-`REPOSITORY_NAME` | Nome do repositório GIT <br> _Ex.: github.com/veezor/veezor-demo_
-`GIT_SERVICE` | Nome do servidor de GIT: <br> _github.com/veezor/veezor-demo_
 <br>
-
-``` bash
-# AMBIENTE (ECS)
-$ cdk deploy \
-  -c 'PROJECT_OWNER=veezor' \
-  -c 'REPOSITORY_NAME=veezor-demo' \
-  -c 'BRANCH=staging' \
-  -c 'VPC_ID=vpc-0c922739a34c3b011' \
-  -c 'PROJECT_SECRETS={"PORT":"3000","APP_NAME":"Veezor Demo","APP_ENV":"production","APP_KEY":"base64:mTKdvsz2/Ips0hLbWFs8ZxuOtIrjYiyMpL8uupQJVvw="}' \
-  -c 'TEST=true'
-```
-
-Variável | Descrição
----------|-----------
-`PROJECT_OWNER` | Dono do repositório GIT <br> Ex.: _github.com/veezor/veezor-demo_
-`REPOSITORY_NAME` | Nome do repositório GIT <br> _Ex.: github.com/veezor/veezor-demo_
-`BRANCH` | Nome da branch que será utilizada para realizar build nesse ambiente
-`VPC_ID` | Identificador da VPC, será entregue no output final da execução do CDK da VPC (Passo anterior)
-`PROJECT_SECRETS` | Valores que serão escritos no secrets manager, o único importante desse exemplo é "PORT" que precisa sempre ser 3000, o restante é usado para a página de hello world
-`TEST` | Desabilita a proteção contra deleção de recurso, não utilizar em produção
+Descrição das opçoes exibidas pelo script maestro_run.sh 
+1) Git_update --> Atualiza o código local de acordo com a branch em uso, caso haja alteraçoes. Mesmo que utilizar git fetch e git update no terminal.
+2) NPM_Update --> Instala ou atualiza as bibliotecas (pasta node_modules) utilizadas no projeto.
+3) Bootstrap --> Necessário ser executado em contas AWS que nunca tiveram algum contato com CDK, caso esse passo seja pulado, os demais deverão falhar, por falta da configuração inicial exigida pelo CDK. Só necessita ser executado uma única vez em cada conta.
+4) VPC --> Responsável pela criação da infraestrutura de REDE, como VPC, subnets, rotas etc.
+5) Maestro_infra --> Responsável pela criação do codebuild, security groups, policies e roles.
+6) Quit --> Encerra a execução do script.
 
 
 ## Premissas para o início da transformação
