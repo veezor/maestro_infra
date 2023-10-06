@@ -55,7 +55,7 @@ export class CodebuildStack extends Stack {
       });
 
     const Ids = vpc.selectSubnets({
-      subnetType: ec2.SubnetType.PRIVATE
+      subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS
     });
 
     for (let subnet of Ids.subnets) {
@@ -86,7 +86,7 @@ export class CodebuildStack extends Stack {
     });
 
     const priIds = vpc.selectSubnets({
-      subnetType: ec2.SubnetType.PRIVATE_WITH_NAT
+      subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS
     });
 
     for (let subnet of priIds.subnets) {
@@ -385,7 +385,6 @@ export class CodebuildStack extends Stack {
     codebuildProjectStructure = {
       projectName: `${projectOwner}-${repositoryName}-${branch}-image-build`,
       description: `Build to project ${repositoryName}, source from github, deploy to ECS fargate.`,
-      badge: true,
       buildSpec: codebuild.BuildSpec.fromObjectToYaml(customBuildSpec),
       role: codeBuildProjectRole,
       securityGroups: [securityGroup],
@@ -406,7 +405,6 @@ export class CodebuildStack extends Stack {
 
     if (gitService != 'bitbucket') {
       codebuildProjectStructure.source = gitSource;
-      codebuildProjectStructure.badge = false;
     };
 
     new codebuild.Project(this, `CreateCodeBuildProject`, codebuildProjectStructure);

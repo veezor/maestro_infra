@@ -6,6 +6,9 @@
     "url": "https://github.com/veezor/veezor-demo",
     "branch": "staging"
   },
+  "account": {
+    "name": "Veezor"
+  },
   "vpc": {
     "name": "veezor",
     "cidr": "10.0.0.0/16",
