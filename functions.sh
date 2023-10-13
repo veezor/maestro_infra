@@ -48,15 +48,35 @@ create_sgs() {
   read -p "Enter VPC ID [$vpc_id_env]: " vpc_id
   vpc_id=${vpc_id:-$vpc_id_env}
   
-  security_group_sulfixes=('app-sg' 'codebuild-sg' 'lb-sg')
+  security_group_sulfixes=('lb-sg' 'app-sg' 'codebuild-sg')
 
   for sg_sulfix in "${security_group_sulfixes[@]}"; do
-    aws ec2 create-security-group \
+    sg_id=$(aws ec2 create-security-group \
       --tag-specifications $aws_cli_tags \
       --group-name "${repository_name,,}-${repository_branch}-${sg_sulfix}" \
       --description "${sg_sulfix^^}" \
       --vpc-id $vpc_id \
+      --profile $aws_profile | jq -r '.GroupId')
+
+    if [[ $sg_sulfix == 'lb-sg' ]]; then 
+      aws ec2 authorize-security-group-ingress \
+      --group-id $sg_id \
+      --protocol tcp \
+      --port 80 \
+      --cidr '0.0.0.0/0' \
       --profile $aws_profile
+
+      lb_sg_id=$sg_id
+    fi
+
+    if [[ $sg_sulfix == 'app-sg' ]]; then 
+      aws ec2 authorize-security-group-ingress \
+      --group-id $sg_id \
+      --protocol tcp \
+      --port 3000 \
+      --source-group $lb_sg_id \
+      --profile $aws_profile
+    fi
   done
 }
 
