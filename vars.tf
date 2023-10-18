@@ -1,4 +1,12 @@
-
+variable "code_provider" {
+  type = string
+}
+variable "repository_url" {
+  type = string
+}
+variable "repository_branch" {
+  type = string
+}
 variable "owner" {
   type = string
 }
