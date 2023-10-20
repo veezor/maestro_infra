@@ -28,3 +28,7 @@ variable "region" {
 variable "vpc_cidr_block" {
   type = string
 }
+
+variable "maestro_image" {
+  type = string
+}

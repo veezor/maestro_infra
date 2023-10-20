@@ -7,7 +7,6 @@ terraform {
   }
 }
 
-# Configure the AWS Provider
 provider "aws" {
   region = var.region
 }
@@ -91,7 +90,29 @@ resource "aws_nat_gateway" "ng" {
   }
 }
 
-resource "aws_route_table" "rt" {
+resource "aws_route_table" "public_rt" {
+  for_each   = { for idx in range(3) : idx => true }
+  vpc_id = aws_vpc.vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.ig.id
+  }
+
+  route {
+    cidr_block = var.vpc_cidr_block
+    gateway_id = "local" 
+  }
+
+  tags = {
+    "Name"        = format("%s-%s/%s%s", "${var.owner}", "${var.environment}", "public", each.key + 1)
+    "Owner"       = "${var.owner}"
+    "Environment" = "${var.environment}"
+  }
+}
+
+resource "aws_route_table" "private_rt" {
+  for_each   = { for idx in range(3) : idx => true }
   vpc_id = aws_vpc.vpc.id
 
   route {
@@ -99,8 +120,13 @@ resource "aws_route_table" "rt" {
     nat_gateway_id = aws_nat_gateway.ng.id
   }
 
+  route {
+    cidr_block = var.vpc_cidr_block
+    nat_gateway_id = "local" 
+  }
+
   tags = {
-    "Name"        = format("%s-%s", "${var.owner}", "${var.environment}")
+    "Name"        = format("%s-%s/%s%s", "${var.owner}", "${var.environment}", "private", each.key + 1)
     "Owner"       = "${var.owner}"
     "Environment" = "${var.environment}"
   }
@@ -109,13 +135,13 @@ resource "aws_route_table" "rt" {
 resource "aws_route_table_association" "public_association" {
   for_each       = { for idx in range(3) : idx => true }
   subnet_id      = aws_subnet.public_subnet[each.key].id
-  route_table_id = aws_route_table.rt.id
+  route_table_id = aws_route_table.public_rt[each.key].id
 }
 
 resource "aws_route_table_association" "private_association" {
   for_each       = { for idx in range(3) : idx => true }
   subnet_id      = aws_subnet.private_subnet[each.key].id
-  route_table_id = aws_route_table.rt.id
+  route_table_id = aws_route_table.private_rt[each.key].id
 }
 
 data "aws_iam_policy_document" "codebuild" {
@@ -173,7 +199,7 @@ resource "aws_iam_policy" "ec2" {
 data "aws_iam_policy_document" "ecr" {
   statement {
     actions   = ["ecr:BatchCheckLayerAvailability", "ecr:BatchGetImage", "ecr:CompleteLayerUpload", "ecr:GetAuthorizationToken", "ecr:GetDownloadUrlForLayer", "ecr:InitiateLayerUpload", "ecr:PutImage", "ecr:UploadLayerPart", "ecr:DescribeRepositories"]
-    resources = ["arn:aws:ecr:us-east-1:${data.aws_caller_identity.current.account_id}:repository/*"]
+    resources = ["*"]
     effect    = "Allow"
   }
 }
@@ -225,7 +251,7 @@ resource "aws_iam_policy" "iam-service-role" {
 data "aws_iam_policy_document" "kms" {
   statement {
     actions   = ["kms:Decrypt"]
-    resources = ["arn:aws:kms:us-east-1:${data.aws_caller_identity.current.account_id}:key/*"]
+    resources = ["arn:aws:kms:${var.region}:${data.aws_caller_identity.current.account_id}:key/*"]
     effect    = "Allow"
   }
 }
@@ -251,7 +277,7 @@ resource "aws_iam_policy" "s3" {
 data "aws_iam_policy_document" "sm" {
   statement {
     actions   = ["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"]
-    resources = ["arn:aws:secretsmanager:us-east-1:${data.aws_caller_identity.current.account_id}:secret:*/${var.owner}-${var.project}*"]
+    resources = ["arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${var.environment}/${var.owner}-${var.project}*"]
     effect    = "Allow"
   }
 }
@@ -264,7 +290,7 @@ resource "aws_iam_policy" "sm" {
 # data "aws_iam_policy_document" "ec2-network" {
 #   statement {
 #     actions   = ["ec2:CreateNetworkInterface", "ec2:CreateNetworkInterfacePermission", "ec2:DeleteNetworkInterface"]
-#     resources = ["arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:network-interface/*", "arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:subnet/*"]
+#     resources = ["arn:aws:ec2:${var.region}:${data.aws_caller_identity.current.account_id}:network-interface/*", "arn:aws:ec2:us-east-1:${data.aws_caller_identity.current.account_id}:subnet/*"]
 #     condition {
 #       test     = "ForAnyValue:StringEquals"
 #       variable = ["ec2:Subnet", "ec2:AuthorizedService"]
@@ -281,6 +307,8 @@ resource "aws_iam_policy" "sm" {
 #   name = format("%s-%s-%s-ec2-network", "${var.owner}", "${var.project}", "${var.environment}")
 #   policy = data.aws_iam_policy_document.ec2-network.json
 # }
+
+
 
 resource "aws_iam_role" "role" {
   name               = format("%s-%s-%s-Maestro", "${var.owner}", "${var.project}", "${var.environment}")
@@ -455,8 +483,9 @@ EOF
   }
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "public.ecr.aws/h4u2q3r3/maestro:1.2.1"
+    image        = "${var.maestro_image}"
     type         = "LINUX_CONTAINER"
+    privileged_mode = true
     environment_variable {
       name  = "ALB_SCHEME"
       value = "internet-facing"
@@ -485,6 +514,47 @@ EOF
       name  = "ECS_SERVICE_SUBNETS"
       value = format("%s,%s,%s", aws_subnet.private_subnet[0].id, aws_subnet.private_subnet[1].id, aws_subnet.private_subnet[2].id)
     }
+    environment_variable {
+      name  = "ECS_SERVICE_TASK_PROCESSES"
+      value = "web{1024;2048}:1-2"
+    }
+    environment_variable {
+      name  = "ECS_TASK_ROLE_ARN"
+      value = aws_iam_role.role.arn
+    }
+    environment_variable {
+      name  = "MAESTRO_BRANCH_OVERRIDE"
+      value = "${var.environment}"
+    }
+    environment_variable {
+      name  = "MAESTRO_DEBUG"
+      value = false
+    }
+    environment_variable {
+      name  = "MAESTRO_NO_CACHE"
+      value = false
+    }
+    environment_variable {
+      name  = "MAESTRO_ONLY_BUILD"
+      value = ""
+    }
+    environment_variable {
+      name  = "MAESTRO_SKIP_BUILD"
+      value = ""
+    }
+    environment_variable {
+      name  = "WORKLOAD_RESOURCE_TAGS"
+      value = format("Owner=%s,Project=%s,Environment=%s", var.owner, var.project, var.environment)
+    }
+    environment_variable {
+      name  = "WORKLOAD_VPC_ID"
+      value = aws_vpc.vpc.id
+    }
+    environment_variable {
+      name  = "MAESTRO_REPO_OVERRIDE"
+      value = format("%s/%s", var.owner, var.project)
+    }    
+
   }
   vpc_config {
     vpc_id = aws_vpc.vpc.id
@@ -509,7 +579,9 @@ resource "aws_secretsmanager_secret_version" "content" {
   secret_id = aws_secretsmanager_secret.secret.id
 
   secret_string = jsonencode({
-    PORT = "3000"
+    PORT = "3000",
+    TASK_ROLE_ARN = aws_iam_role.role.arn,
+    EXECUTION_ROLE_ARN = aws_iam_role.role.arn
   })
 }
 
