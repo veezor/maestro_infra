@@ -8,6 +8,8 @@ Criar um arquivo `.json` usando como base o arquivo `env_sample.json`, alterando
 
 Estrutura do arquivo `env_sample.json
 
+
+```
 {
   "test": false, // false - facilita na remoção dos recursos, caso seja um ambiente temporário.
                  // true - Ativa uma flag nos recursos que dificulta a deleção acidental. Ambiente de produção, ou 
@@ -44,6 +46,7 @@ Estrutura do arquivo `env_sample.json
   "efs": [], // Utilizado para montar EFSs adicionais nos containers. Doocumentação precisa ser atualizada.
   "tags": "[[\"Owner\",\"OAntagonista\"],[\"Environment\",\"Development\"],[\"Project\", \"oantagonista\"]]"
 }
+```
 
 > **Para todas as execuções de script desta documentação, pode-se complementar o comando com a instrução** <br> `--profile <AWS Account>` **caso o AWS-CLI esteja configurado na máquina com a utilização de profiles.** <br>
 
@@ -57,7 +60,8 @@ Caso necessário, dê permissões para executar o .sh com o comando: <br>
 ```
 
 <br>
-Descrição das opçoes exibidas pelo script maestro_run.sh 
+Descrição das opçoes exibidas pelo script maestro_run.sh
+
 1) Git_update --> Atualiza o código local de acordo com a branch em uso, caso haja alteraçoes. Mesmo que utilizar git fetch e git update no terminal.
 2) NPM_Update --> Instala ou atualiza as bibliotecas (pasta node_modules) utilizadas no projeto.
 3) Bootstrap --> Necessário ser executado em contas AWS que nunca tiveram algum contato com CDK, caso esse passo seja pulado, os demais deverão falhar, por falta da configuração inicial exigida pelo CDK. Só necessita ser executado uma única vez em cada conta.
