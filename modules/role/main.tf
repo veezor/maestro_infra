@@ -1,3 +1,4 @@
+data "aws_caller_identity" "current" {}
 data "aws_iam_policy_document" "codebuild" {
   statement {
     actions   = ["codebuild:StartBuild", "codebuild:StopBuild", "codebuild:CreateProject", "codebuild:DeleteProject", "codebuild:BatchGetBuilds", "codebuild:ListBuilds", "codebuild:GetBuild", "codebuild:DescribeProject", "codebuild:ListProjects"]
@@ -212,4 +213,8 @@ resource "aws_iam_role_policy_attachment" "s3" {
 resource "aws_iam_role_policy_attachment" "sm" {
   role       = aws_iam_role.role.name
   policy_arn = aws_iam_policy.sm.arn
+}
+
+output "role_arn" {
+  value = aws_iam_role.role.arn
 }

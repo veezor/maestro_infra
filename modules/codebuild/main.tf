@@ -6,7 +6,7 @@ resource "aws_cloudwatch_log_group" "lg" {
 resource "aws_codebuild_project" "cb" {
   name           = format("%s-%s-%s", "${var.owner}", "${var.project}", "${var.environment}")
   description    = "Maestro"
-  service_role   = aws_iam_role.role.arn
+  service_role   = var.aws_iam_role
   source_version = var.repository_branch
   source {
     type     = var.code_provider
@@ -34,11 +34,11 @@ EOF
     }
     environment_variable {
       name  = "ALB_SECURITY_GROUPS"
-      value = aws_security_group.lb.id
+      value = var.aws_security_group_lb
     }
     environment_variable {
       name  = "ALB_SUBNETS"
-      value = format("%s,%s,%s", aws_subnet.private_subnet[0].id, aws_subnet.private_subnet[1].id, aws_subnet.private_subnet[2].id)
+      value = format("%s,%s,%s", var.aws_subnets[0], var.aws_subnets[1], var.aws_subnets[2])
     }
     environment_variable {
       name  = "ECS_EFS_VOLUMES"
@@ -46,15 +46,15 @@ EOF
     }
     environment_variable {
       name  = "ECS_EXECUTION_ROLE_ARN"
-      value = aws_iam_role.role.arn
+      value = var.aws_iam_role
     }
     environment_variable {
       name  = "ECS_SERVICE_SECURITY_GROUPS"
-      value = aws_security_group.app.id
+      value = var.aws_security_group_app
     }
     environment_variable {
       name  = "ECS_SERVICE_SUBNETS"
-      value = format("%s,%s,%s", aws_subnet.private_subnet[0].id, aws_subnet.private_subnet[1].id, aws_subnet.private_subnet[2].id)
+      value = format("%s,%s,%s", var.aws_subnets[0], var.aws_subnets[1], var.aws_subnets[2])
     }
     environment_variable {
       name  = "ECS_SERVICE_TASK_PROCESSES"
@@ -62,7 +62,7 @@ EOF
     }
     environment_variable {
       name  = "ECS_TASK_ROLE_ARN"
-      value = aws_iam_role.role.arn
+      value = var.aws_iam_role
     }
     environment_variable {
       name  = "MAESTRO_BRANCH_OVERRIDE"
@@ -90,7 +90,7 @@ EOF
     }
     environment_variable {
       name  = "WORKLOAD_VPC_ID"
-      value = aws_vpc.vpc.id
+      value = var.aws_vpc_id
     }
     environment_variable {
       name  = "MAESTRO_REPO_OVERRIDE"
@@ -99,16 +99,16 @@ EOF
 
   }
   vpc_config {
-    vpc_id = aws_vpc.vpc.id
+    vpc_id = var.aws_vpc_id
 
     subnets = [
-      aws_subnet.private_subnet[0].id,
-      aws_subnet.private_subnet[1].id,
-      aws_subnet.private_subnet[2].id
+      var.aws_subnets[0],
+      var.aws_subnets[1],
+      var.aws_subnets[2]
     ]
 
     security_group_ids = [
-      aws_security_group.codebuild.id
+      var.aws_security_group_cb
     ]
   }
 }
@@ -122,8 +122,8 @@ resource "aws_secretsmanager_secret_version" "content" {
 
   secret_string = jsonencode({
     PORT = "3000",
-    TASK_ROLE_ARN = aws_iam_role.role.arn,
-    EXECUTION_ROLE_ARN = aws_iam_role.role.arn
+    TASK_ROLE_ARN = var.aws_iam_role,
+    EXECUTION_ROLE_ARN = var.aws_iam_role
   })
 }
 

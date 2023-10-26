@@ -27,7 +27,7 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
-resource "aws_subnet" "private_subnet" {
+resource "aws_subnet" "private_subnets" {
   for_each   = { for idx in range(3) : idx => true }
   vpc_id     = aws_vpc.vpc.id
   cidr_block = local.subnet_cidrs[each.key + 3]
@@ -120,13 +120,8 @@ resource "aws_route_table_association" "public_association" {
 
 resource "aws_route_table_association" "private_association" {
   for_each       = { for idx in range(3) : idx => true }
-  subnet_id      = aws_subnet.private_subnet[each.key].id
+  subnet_id      = aws_subnet.private_subnets[each.key].id
   route_table_id = aws_route_table.private_rt[each.key].id
-}
-
-resource "aws_cloudwatch_log_group" "lg" {
-  name              = format("/aws/codebuild/%s-%s-%s", "${var.owner}", "${var.project}", "${var.environment}")
-  retention_in_days = 7
 }
 
 resource "aws_security_group" "app" {
@@ -159,7 +154,7 @@ resource "aws_security_group_rule" "app_outbound_all_traffic" {
   to_port                  = 0
   protocol                 = "all"
   security_group_id        = aws_security_group.app.id
-  source_security_group_id = aws_security_group.lb.id
+  cidr_blocks = ["0.0.0.0/0"]
 }
 
 resource "aws_security_group_rule" "lb_inbound_443" {
@@ -170,6 +165,16 @@ resource "aws_security_group_rule" "lb_inbound_443" {
   security_group_id = aws_security_group.lb.id
   cidr_blocks       = ["0.0.0.0/0"]
 }
+
+resource "aws_security_group_rule" "lb_inbound_80" {
+  type              = "ingress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  security_group_id = aws_security_group.lb.id
+  cidr_blocks       = ["0.0.0.0/0"]
+}
+
 
 resource "aws_security_group_rule" "lb_outbound_all_traffic" {
   type              = "egress"
@@ -187,4 +192,24 @@ resource "aws_security_group_rule" "codebuild_outbound_all_traffic" {
   protocol          = "all"
   security_group_id = aws_security_group.codebuild.id
   cidr_blocks = ["0.0.0.0/0"]
+}
+
+output "sg_lb_id" {
+  value = aws_security_group.lb.id
+}
+
+output "sg_app_id" {
+  value = aws_security_group.app.id
+}
+
+output "sg_codebuild_id" {
+  value = aws_security_group.codebuild.id
+}
+
+output "aws_subnets" {
+  value = [aws_subnet.private_subnets[0].id, aws_subnet.private_subnets[1].id, aws_subnet.private_subnets[2].id]
+}
+
+output "aws_vpc_id" {
+  value = aws_vpc.vpc.id
 }
