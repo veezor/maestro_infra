@@ -1,6 +1,78 @@
+resource "aws_security_group" "app" {
+  name   = format("%s-%s-%s-app", "${var.owner}", "${var.project}", "${var.environment}")
+  vpc_id = var.aws_vpc_id
+}
+
+resource "aws_security_group" "lb" {
+  name   = format("%s-%s-%s-lb", "${var.owner}", "${var.project}", "${var.environment}")
+  vpc_id = var.aws_vpc_id
+}
+
+resource "aws_security_group" "codebuild" {
+  name   = format("%s-%s-%s-codebuild", "${var.owner}", "${var.project}", "${var.environment}")
+  vpc_id = var.aws_vpc_id
+}
+
+resource "aws_security_group_rule" "app_inbound_lb_3000" {
+  type                     = "ingress"
+  from_port                = 3000
+  to_port                  = 3000
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.app.id
+  source_security_group_id = aws_security_group.lb.id
+}
+
+resource "aws_security_group_rule" "app_outbound_all_traffic" {
+  type                     = "egress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "all"
+  security_group_id        = aws_security_group.app.id
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "lb_inbound_443" {
+  type              = "ingress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  security_group_id = aws_security_group.lb.id
+  cidr_blocks       = ["0.0.0.0/0"]
+}
+resource "aws_security_group_rule" "lb_inbound_80" {
+  type              = "ingress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  security_group_id = aws_security_group.lb.id
+  cidr_blocks       = ["0.0.0.0/0"]
+}
+
+
+resource "aws_security_group_rule" "lb_outbound_all_traffic" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "all"
+  security_group_id = aws_security_group.lb.id
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "codebuild_outbound_all_traffic" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "all"
+  security_group_id = aws_security_group.codebuild.id
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
 resource "aws_cloudwatch_log_group" "lg" {
   name              = format("/aws/codebuild/%s-%s-%s", "${var.owner}", "${var.project}", "${var.environment}")
   retention_in_days = 7
+}
+output "lb_id" {
+  value = aws_security_group.lb.id
 }
 
 resource "aws_codebuild_project" "cb" {
@@ -32,9 +104,10 @@ EOF
       name  = "ALB_SCHEME"
       value = "internet-facing"
     }
+
     environment_variable {
       name  = "ALB_SECURITY_GROUPS"
-      value = var.aws_security_group_lb
+      value = aws_security_group.lb.id
     }
     environment_variable {
       name  = "ALB_SUBNETS"
@@ -50,7 +123,7 @@ EOF
     }
     environment_variable {
       name  = "ECS_SERVICE_SECURITY_GROUPS"
-      value = var.aws_security_group_app
+      value = aws_security_group.app.id
     }
     environment_variable {
       name  = "ECS_SERVICE_SUBNETS"
@@ -108,7 +181,7 @@ EOF
     ]
 
     security_group_ids = [
-      var.aws_security_group_cb
+      aws_security_group.codebuild.id
     ]
   }
 }

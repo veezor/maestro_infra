@@ -12,8 +12,7 @@ provider "aws" {
 }
 
 module "vpc" {
-  source         = "./modules/vpc"
-  project        = var.project
+  source = "./modules/vpc"
   owner          = var.owner
   environment    = var.environment
   vpc_cidr_block = var.vpc_cidr_block
@@ -21,26 +20,27 @@ module "vpc" {
 
 module "role" {
   source         = "./modules/role"
-  project        = var.project
+  for_each = {for project in var.projects:  project.name => project}
+
+  project        = each.value.name
   owner          = var.owner
   environment    = var.environment
   vpc_cidr_block = var.vpc_cidr_block
   region         = var.region
-}
-
+ }
+ 
 module "codebuild" {
   source                    = "./modules/codebuild"
-  project                   = var.project
+  for_each = {for project in var.projects:  project.name => project}
+
+  project                   = each.value.name
   owner                     = var.owner
   environment               = var.environment
-  repository_branch         = var.repository_branch
-  code_provider             = var.code_provider
-  repository_url            = var.repository_url
+  repository_branch         = each.value.repository_branch
+  code_provider             = each.value.code_provider
+  repository_url            = each.value.repository_url
   maestro_image             = var.maestro_image
-  aws_iam_role              = module.role.role_arn
-  aws_security_group_lb     = module.vpc.sg_lb_id
-  aws_security_group_app    = module.vpc.sg_app_id
-  aws_security_group_cb     = module.vpc.sg_codebuild_id
+  aws_iam_role              = module.role[each.key].role_arn
   aws_subnets               = module.vpc.aws_subnets
   aws_vpc_id                = module.vpc.aws_vpc_id
 }
