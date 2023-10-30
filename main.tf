@@ -17,6 +17,7 @@ module "vpc" {
   owner          = var.owner
   environment    = var.environment
   vpc_cidr_block = var.vpc_cidr_block
+  ip_type = var.ip_type
 }
 
 module "role" {

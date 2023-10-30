@@ -29,6 +29,10 @@ variable "vpc_cidr_block" {
   type = string
 }
 
+variable "ip_type" {
+  type = string
+}
+
 variable "maestro_image" {
   type = string
 }
