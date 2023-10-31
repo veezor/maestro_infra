@@ -1,17 +1,13 @@
-variable "code_provider" {
-  type = string
-}
-variable "repository_url" {
-  type = string
-}
-variable "repository_branch" {
-  type = string
-}
-variable "owner" {
-  type = string
+variable projects {
+  type = list(object({
+    name = string
+    code_provider = string
+    repository_url = string
+    repository_branch = string
+  }))
 }
 
-variable "project" {
+variable "owner" {
   type = string
 }
 
