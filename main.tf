@@ -41,6 +41,7 @@ module "codebuild" {
   repository_url            = each.value.repository_url
   maestro_image             = var.maestro_image
   aws_iam_role              = module.role[each.key].role_arn
-  aws_subnets               = module.vpc.aws_subnets
+  aws_public_subnets        = module.vpc.aws_public_subnets
+  aws_private_subnets       = module.vpc.aws_public_subnets
   aws_vpc_id                = module.vpc.aws_vpc_id
 }

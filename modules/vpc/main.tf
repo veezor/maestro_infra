@@ -15,7 +15,7 @@ resource "aws_vpc" "vpc" {
   }
 }
 
-resource "aws_subnet" "public_subnet" {
+resource "aws_subnet" "public_subnets" {
   for_each   = { for idx in range(3) : idx => true }
   vpc_id     = aws_vpc.vpc.id
   cidr_block = local.subnet_cidrs[each.key]
@@ -61,7 +61,7 @@ resource "aws_eip" "nat_eip" {
 
 resource "aws_nat_gateway" "ng" {
   allocation_id = aws_eip.nat_eip.id
-  subnet_id     = aws_subnet.public_subnet[0].id
+  subnet_id     = aws_subnet.public_subnets[0].id
 
   tags = {
     "Name"        = format("%s-%s", "${var.owner}", "${var.environment}")
@@ -114,7 +114,7 @@ resource "aws_route_table" "private_rt" {
 
 resource "aws_route_table_association" "public_association" {
   for_each       = { for idx in range(3) : idx => true }
-  subnet_id      = aws_subnet.public_subnet[each.key].id
+  subnet_id      = aws_subnet.public_subnets[each.key].id
   route_table_id = aws_route_table.public_rt[each.key].id
 }
 
@@ -124,7 +124,11 @@ resource "aws_route_table_association" "private_association" {
   route_table_id = aws_route_table.private_rt[each.key].id
 }
 
-output "aws_subnets" {
+output "aws_public_subnets" {
+  value = [aws_subnet.public_subnets[0].id, aws_subnet.public_subnets[1].id, aws_subnet.public_subnets[2].id]
+}
+
+output "aws_private_subnets" {
   value = [aws_subnet.private_subnets[0].id, aws_subnet.private_subnets[1].id, aws_subnet.private_subnets[2].id]
 }
 
