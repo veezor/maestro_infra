@@ -42,21 +42,25 @@ module "codebuild" {
   maestro_image             = var.maestro_image
   aws_iam_role              = module.role[each.key].role_arn
   aws_public_subnets        = module.vpc.aws_public_subnets
-  aws_private_subnets       = module.vpc.aws_public_subnets
+  aws_private_subnets       = module.vpc.aws_private_subnets
   aws_vpc_id                = module.vpc.aws_vpc_id
 }
 
 module "redis" {
-  count = var.create_redis == "true" ? 1 : 0
   source                    = "./modules/redis"
-  project                   = var.project
+  for_each = {
+    for project in var.projects:  project.name => project
+    if project.create_redis == true 
+  }
+  
+  project                   = each.value.name
   owner                     = var.owner
   environment               = var.environment
-  engine                    = var.engine
-  engine_version            = element(split("@", var.engine), 1)
-  node_type                 = var.node_type
-  num_cache_nodes           = var.num_cache_nodes
-  parameter_group           = var.parameter_group
-  port                      = var.port
-  subnet_ids                = module.vpc.aws_subnets
+  engine                    = element(split("@", each.value.engine), 0)
+  engine_version            = element(split("@", each.value.engine), 1)
+  node_type                 = each.value.node_type
+  num_cache_nodes           = each.value.num_cache_nodes
+  parameter_group           = each.value.parameter_group
+  port                      = each.value.port
+  subnet_ids                = module.vpc.aws_private_subnets
 }
