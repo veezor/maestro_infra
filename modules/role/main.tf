@@ -12,17 +12,17 @@ resource "aws_iam_policy" "codebuild" {
   policy = data.aws_iam_policy_document.codebuild.json
 }
 
-data "aws_iam_policy_document" "cloudwatch" {
+data "aws_iam_policy_document" "cloudwatch-ssm" {
   statement {
-    actions   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogGroups", "logs:TagResource"]
+    actions   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogGroups", "logs:TagResource", "ssmmessages:CreateControlChannel", "ssmmessages:CreateDataChannel", "ssmmessages:OpenControlChannel", "ssmmessages:OpenDataChannel"]
     resources = ["*"]
     effect    = "Allow"
   }
 }
 
-resource "aws_iam_policy" "cloudwatch" {
-  name   = format("%s-%s-%s-cloudwatch", "${var.owner}", "${var.project}", "${var.environment}")
-  policy = data.aws_iam_policy_document.cloudwatch.json
+resource "aws_iam_policy" "cloudwatch-ssm" {
+  name   = format("%s-%s-%s-cloudwatch-ssm", "${var.owner}", "${var.project}", "${var.environment}")
+  policy = data.aws_iam_policy_document.cloudwatch-ssm.json
 }
 
 data "aws_iam_policy_document" "ecs" {
@@ -170,9 +170,9 @@ resource "aws_iam_role_policy_attachment" "codebuild" {
   policy_arn = aws_iam_policy.codebuild.arn
 }
 
-resource "aws_iam_role_policy_attachment" "cloudwatch" {
+resource "aws_iam_role_policy_attachment" "cloudwatch-ssm" {
   role       = aws_iam_role.role.name
-  policy_arn = aws_iam_policy.cloudwatch.arn
+  policy_arn = aws_iam_policy.cloudwatch-ssm.arn
 }
 
 resource "aws_iam_role_policy_attachment" "ecs" {
