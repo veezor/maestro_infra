@@ -45,3 +45,21 @@ module "codebuild" {
   aws_private_subnets       = module.vpc.aws_public_subnets
   aws_vpc_id                = module.vpc.aws_vpc_id
 }
+
+module "rds" {
+  source                    = "./modules/rds"
+  for_each = {for project in var.projects:  project.name => project}
+
+  project                   = each.value.name
+  owner                     = var.owner
+  environment               = var.environment
+  cluster_identifier        = each.value.rds_cluster_identifier
+  engine                    = each.value.rds_engine
+  engine_version            = each.value.rds_engine_version
+  availability_zones        = each.value.rds_availability_zones
+  database_name             = each.value.rds_database_name
+  master_username           = each.value.rds_master_username
+  master_password           = each.value.rds_master_password
+  backup_retention_period   = each.value.rds_backup_retention_period
+  preferred_backup_window   = each.value.rds_preferred_backup_window
+}
