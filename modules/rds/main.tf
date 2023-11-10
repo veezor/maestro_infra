@@ -1,5 +1,6 @@
 locals {
   snapshot_date = element(split(":", timestamp()), 0)
+  map_app_id = tomap(var.app_id)
 }
 
 resource "aws_security_group" "db" {
@@ -13,7 +14,7 @@ resource "aws_security_group_rule" "db_inbound" {
   to_port                  = aws_rds_cluster_instance.instances[0].port
   protocol                 = "tcp"
   security_group_id        = aws_security_group.db.id
-  source_security_group_id = var.app_id.id
+  source_security_group_id = local.map_app_id[var.project].app_security_group_id.id
 }
 
 resource "aws_rds_cluster_instance" "instances" {
