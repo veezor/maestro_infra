@@ -48,7 +48,6 @@ resource "aws_security_group_rule" "lb_inbound_80" {
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
-
 resource "aws_security_group_rule" "lb_outbound_all_traffic" {
   type              = "egress"
   from_port         = 0
@@ -201,6 +200,6 @@ resource "aws_ecr_repository" "ecr_repository" {
   name = format("%s-%s-%s", "${var.owner}", "${var.project}", "${var.environment}")
 }
 
-output "security_group_id" {
-  value = aws_security_group.app.*.id
+output "app_security_group_id" {
+  value = aws_security_group.app
 }

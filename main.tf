@@ -65,5 +65,5 @@ module "rds" {
   rds_preferred_backup_window   = each.value.rds_preferred_backup_window
   number_of_instances           = each.value.number_of_instances
   aws_vpc_id                    = module.vpc.aws_vpc_id
-  app_id                        = module.codebuild.security_group_id
+  app_id                        = module.codebuild
 }
