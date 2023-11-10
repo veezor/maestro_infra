@@ -48,18 +48,22 @@ module "codebuild" {
 
 module "rds" {
   source                    = "./modules/rds"
-  for_each = {for project in var.projects:  project.name => project}
+  for_each = {
+    for project in var.projects:  project.name => project
+    if project.create_rds == true
+  }
 
-  project                   = each.value.name
-  owner                     = var.owner
-  environment               = var.environment
-  cluster_identifier        = each.value.rds_cluster_identifier
-  engine                    = each.value.rds_engine
-  engine_version            = each.value.rds_engine_version
-  availability_zones        = each.value.rds_availability_zones
-  database_name             = each.value.rds_database_name
-  master_username           = each.value.rds_master_username
-  master_password           = each.value.rds_master_password
-  backup_retention_period   = each.value.rds_backup_retention_period
-  preferred_backup_window   = each.value.rds_preferred_backup_window
+  project                       = each.value.name
+  owner                         = var.owner
+  environment                   = var.environment
+  rds_engine                    = each.value.rds_engine
+  rds_engine_version            = each.value.rds_engine_version
+  rds_availability_zones        = each.value.rds_availability_zones
+  rds_master_username           = each.value.rds_master_username
+  rds_master_password           = each.value.rds_master_password
+  rds_backup_retention_period   = each.value.rds_backup_retention_period
+  rds_preferred_backup_window   = each.value.rds_preferred_backup_window
+  number_of_instances           = each.value.number_of_instances
+  aws_vpc_id                    = module.vpc.aws_vpc_id
+  app_id                        = module.codebuild.security_group_id
 }

@@ -71,9 +71,6 @@ resource "aws_cloudwatch_log_group" "lg" {
   name              = format("/aws/codebuild/%s-%s-%s", "${var.owner}", "${var.project}", "${var.environment}")
   retention_in_days = 7
 }
-output "lb_id" {
-  value = aws_security_group.lb.id
-}
 
 resource "aws_codebuild_project" "cb" {
   name           = format("%s-%s-%s", "${var.owner}", "${var.project}", "${var.environment}")
@@ -202,4 +199,8 @@ resource "aws_secretsmanager_secret_version" "content" {
 
 resource "aws_ecr_repository" "ecr_repository" {
   name = format("%s-%s-%s", "${var.owner}", "${var.project}", "${var.environment}")
+}
+
+output "security_group_id" {
+  value = aws_security_group.app.*.id
 }
