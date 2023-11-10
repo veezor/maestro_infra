@@ -1,0 +1,13 @@
+variable owner {}
+variable project {}
+variable environment {}
+variable rds_engine {}
+variable rds_engine_version {}
+variable rds_availability_zones {}
+variable rds_master_username {}
+variable rds_master_password {}
+variable rds_backup_retention_period {}
+variable rds_preferred_backup_window {}
+variable number_of_instances {}
+variable aws_vpc_id {}
+variable app_id {}
