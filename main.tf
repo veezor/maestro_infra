@@ -63,4 +63,6 @@ module "redis" {
   parameter_group           = each.value.redis_parameter_group
   port                      = each.value.redis_port
   subnet_ids                = module.vpc.aws_private_subnets
+  aws_vpc_id                = module.vpc.aws_vpc_id
+  sg_ids                    = module.codebuild
 }
