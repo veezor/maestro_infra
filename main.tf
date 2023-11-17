@@ -50,18 +50,18 @@ module "redis" {
   source                    = "./modules/redis"
   for_each = {
     for project in var.projects:  project.name => project
-    if project.create_redis == true 
+    if project.redis.create_redis == true 
   }
   
   project                   = each.value.name
   owner                     = var.owner
   environment               = var.environment
-  engine                    = element(split("@", each.value.redis_engine), 0)
-  engine_version            = element(split("@", each.value.redis_engine), 1)
-  node_type                 = each.value.redis_node_type
-  num_cache_nodes           = each.value.redis_num_cache_nodes
-  parameter_group           = each.value.redis_parameter_group
-  port                      = each.value.redis_port
+  engine                    = element(split("@", each.value.redis.engine), 0)
+  engine_version            = element(split("@", each.value.redis.engine), 1)
+  node_type                 = each.value.redis.node_type
+  num_cache_nodes           = each.value.redis.num_cache_nodes
+  parameter_group           = each.value.redis.parameter_group
+  port                      = each.value.redis.port
   subnet_ids                = module.vpc.aws_private_subnets
   aws_vpc_id                = module.vpc.aws_vpc_id
   sg_ids                    = module.codebuild

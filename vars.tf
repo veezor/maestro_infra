@@ -4,12 +4,14 @@ variable projects {
     code_provider = string
     repository_url = string
     repository_branch = string
-    create_redis = bool
-    redis_engine = string
-    redis_node_type = string
-    redis_num_cache_nodes = string
-    redis_port = string
-    redis_parameter_group = string
+    redis = object({
+      create_redis = bool
+      engine = string
+      node_type = string
+      num_cache_nodes = string
+      port = string
+      parameter_group = string 
+    })
   }))
 }
 
