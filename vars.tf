@@ -4,15 +4,17 @@ variable projects {
     code_provider = string
     repository_url = string
     repository_branch = string
-    create_rds = bool
-    rds_engine = string
-    rds_engine_version = string
-    rds_availability_zones = list(string)
-    rds_master_username = string
-    rds_master_password = string
-    rds_backup_retention_period = string
-    rds_preferred_backup_window = string
-    number_of_instances = number
+    rds = object({
+      create_rds = bool
+      engine = string
+      engine_version = string
+      availability_zones = list(string)
+      master_username = string
+      master_password = string
+      backup_retention_period = string
+      preferred_backup_window = string
+      number_of_instances = number 
+    })
   }))
 }
 

@@ -28,13 +28,13 @@ resource "aws_rds_cluster_instance" "instances" {
 
 resource "aws_rds_cluster" "cluster" {
   cluster_identifier        = format("%s-%s-%s-cluster", "${var.owner}", "${var.project}", "${var.environment}")
-  engine                    = var.rds_engine
-  engine_version            = var.rds_engine_version
-  availability_zones        = var.rds_availability_zones
+  engine                    = var.engine
+  engine_version            = var.engine_version
+  availability_zones        = var.availability_zones
   database_name             = var.project
-  master_username           = var.rds_master_username
-  master_password           = var.rds_master_password
-  backup_retention_period   = var.rds_backup_retention_period
-  preferred_backup_window   = var.rds_preferred_backup_window
+  master_username           = var.master_username
+  master_password           = var.master_password
+  backup_retention_period   = var.backup_retention_period
+  preferred_backup_window   = var.preferred_backup_window
   final_snapshot_identifier = format("%s-%s-%s-cluster-%s", "${var.owner}", "${var.project}", "${var.environment}", "${local.snapshot_date}")
 }

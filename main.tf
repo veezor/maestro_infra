@@ -50,24 +50,20 @@ module "rds" {
   source                    = "./modules/rds"
   for_each = {
     for project in var.projects:  project.name => project
-    if project.create_rds == true
+    if project.rds.create_rds == true
   }
 
   project                       = each.value.name
   owner                         = var.owner
   environment                   = var.environment
-  rds_engine                    = each.value.rds_engine
-  rds_engine_version            = each.value.rds_engine_version
-  rds_availability_zones        = each.value.rds_availability_zones
-  rds_master_username           = each.value.rds_master_username
-  rds_master_password           = each.value.rds_master_password
-  rds_backup_retention_period   = each.value.rds_backup_retention_period
-  rds_preferred_backup_window   = each.value.rds_preferred_backup_window
-  number_of_instances           = each.value.number_of_instances
+  engine                        = each.value.rds.engine
+  engine_version                = each.value.rds.engine_version
+  availability_zones            = each.value.rds.availability_zones
+  master_username               = each.value.rds.master_username
+  master_password               = each.value.rds.master_password
+  backup_retention_period       = each.value.rds.backup_retention_period
+  preferred_backup_window       = each.value.rds.preferred_backup_window
+  number_of_instances           = each.value.rds.number_of_instances
   aws_vpc_id                    = module.vpc.aws_vpc_id
   app_id                        = module.codebuild
 }
-
-//output "show_me" {
-//  value = local.map_codebuild["backend"].app_security_group_id.id
-//}
