@@ -107,7 +107,7 @@ EOF
     }
     environment_variable {
       name  = "ALB_SUBNETS"
-      value = format("%s,%s,%s", var.aws_private_subnets[0], var.aws_private_subnets[1], var.aws_private_subnets[2])
+      value = format("%s,%s,%s", var.aws_public_subnets[0], var.aws_public_subnets[1], var.aws_public_subnets[2])
     }
     environment_variable {
       name  = "ECS_EFS_VOLUMES"
@@ -123,7 +123,7 @@ EOF
     }
     environment_variable {
       name  = "ECS_SERVICE_SUBNETS"
-      value = format("%s,%s,%s", var.aws_public_subnets[0], var.aws_public_subnets[1], var.aws_public_subnets[2])
+      value = format("%s,%s,%s", var.aws_private_subnets[0], var.aws_private_subnets[1], var.aws_private_subnets[2])
     }
     environment_variable {
       name  = "ECS_SERVICE_TASK_PROCESSES"
@@ -171,9 +171,9 @@ EOF
     vpc_id = var.aws_vpc_id
 
     subnets = [
-      var.aws_public_subnets[0],
-      var.aws_public_subnets[1],
-      var.aws_public_subnets[2]
+      var.aws_private_subnets[0],
+      var.aws_private_subnets[1],
+      var.aws_private_subnets[2]
     ]
 
     security_group_ids = [
