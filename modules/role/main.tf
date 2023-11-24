@@ -226,56 +226,56 @@ resource "aws_iam_role" "ecs_role" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "codebuild" {
+resource "aws_iam_role_policy_attachment" "codebuild_for-ecs" {
   role       = aws_iam_role.ecs_role.name
   policy_arn = aws_iam_policy.codebuild.arn
 }
 
-resource "aws_iam_role_policy_attachment" "cloudwatch-ssm" {
+resource "aws_iam_role_policy_attachment" "cloudwatch-ssm_for-ecs" {
   role       = aws_iam_role.ecs_role.name
   policy_arn = aws_iam_policy.cloudwatch-ssm.arn
 }
 
-resource "aws_iam_role_policy_attachment" "ecs" {
+resource "aws_iam_role_policy_attachment" "ecs_for-ecs" {
   role       = aws_iam_role.ecs_role.name
   policy_arn = aws_iam_policy.ecs.arn
 }
 
-resource "aws_iam_role_policy_attachment" "ec2-autoscaling" {
+resource "aws_iam_role_policy_attachment" "ec2-autoscaling_for-ecs" {
   role       = aws_iam_role.ecs_role.name
   policy_arn = aws_iam_policy.ec2-autoscaling.arn
 }
 
-resource "aws_iam_role_policy_attachment" "ecr" {
+resource "aws_iam_role_policy_attachment" "ecr_for-ecs" {
   role       = aws_iam_role.ecs_role.name
   policy_arn = aws_iam_policy.ecr.arn
 }
 
-resource "aws_iam_role_policy_attachment" "elb" {
+resource "aws_iam_role_policy_attachment" "elb_for-ecs" {
   role       = aws_iam_role.ecs_role.name
   policy_arn = aws_iam_policy.elb.arn
 }
 
-resource "aws_iam_role_policy_attachment" "iam" {
+resource "aws_iam_role_policy_attachment" "iam_for-ecs" {
   role       = aws_iam_role.ecs_role.name
   policy_arn = aws_iam_policy.iam.arn
 }
 
-resource "aws_iam_role_policy_attachment" "kms" {
+resource "aws_iam_role_policy_attachment" "kms_for-ecs" {
   role       = aws_iam_role.ecs_role.name
   policy_arn = aws_iam_policy.kms.arn
 }
 
-resource "aws_iam_role_policy_attachment" "s3" {
+resource "aws_iam_role_policy_attachment" "s3_for-ecs" {
   role       = aws_iam_role.ecs_role.name
   policy_arn = aws_iam_policy.s3.arn
 }
 
-resource "aws_iam_role_policy_attachment" "sm" {
+resource "aws_iam_role_policy_attachment" "sm_for-ecs" {
   role       = aws_iam_role.ecs_role.name
   policy_arn = aws_iam_policy.sm.arn
 }
 
-output "role_arn" {
-  value = aws_iam_role.role.arn
+output "codebuild_role_arn" {
+  value = aws_iam_role.codebuild_role.arn
 }
