@@ -13,6 +13,17 @@ variable projects {
       master_password = string
       skip_final_snapshot = bool
     }))
+    s3 = object({
+      create_s3 = bool
+      number_of_buckets = number
+      static_site = object({
+        is_static_site = bool
+        index_document = string
+        error_document = string
+        routing_rule_condition = string
+        routing_rule_redirect = string
+      })
+    })
   }))
 }
 

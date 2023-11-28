@@ -46,3 +46,17 @@ module "projects" {
   vpc_cidr_block      = var.vpc_cidr_block
   region              = var.region
 }
+
+module "s3" {
+  source                    = "./modules/s3"
+  for_each = {
+    for project in var.projects:  project.name => project
+    if project.s3.create_s3 == true
+  }
+
+  project                   = each.value.name
+  owner                     = var.owner
+  environment               = var.environment
+  static_site               = each.value.s3.static_site
+  number_of_buckets         = each.value.s3.number_of_buckets
+}
