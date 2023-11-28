@@ -4,6 +4,17 @@ variable projects {
     code_provider = string
     repository_url = string
     repository_branch = string
+    s3 = object({
+      create_s3 = bool
+      number_of_buckets = number
+      static_site = object({
+        is_static_site = bool
+        index_document = string
+        error_document = string
+        routing_rule_condition = string
+        routing_rule_redirect = string
+      })
+    })
   }))
 }
 
