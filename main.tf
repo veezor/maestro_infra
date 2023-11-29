@@ -58,4 +58,5 @@ module "s3" {
   environment               = var.environment
   static_site               = each.value.s3.static_site
   number_of_buckets         = each.value.s3.number_of_buckets
+  bucket_name               = each.value.s3.specify_name
 }
