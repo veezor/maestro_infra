@@ -16,6 +16,7 @@ variable projects {
     s3 = object({
       create_s3 = bool
       number_of_buckets = number
+      specify_name = string
       static_site = object({
         is_static_site = bool
         index_document = string

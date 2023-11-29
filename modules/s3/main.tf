@@ -1,9 +1,9 @@
 resource "aws_s3_bucket" "bucket" {
   count = var.number_of_buckets 
-  bucket = format("%s-%s-%s-bucket", "${var.owner}", "${var.project}", "${var.environment}")
+  bucket = var.bucket_name == "" ? format("%s-%s-%s-bucket", "${var.owner}", "${var.project}", "${var.environment}") : var.bucket_name
 
   tags = {
-    Name        = format("%s-%s-%s-bucket", "${var.owner}", "${var.project}", "${var.environment}")
+    Name        = var.bucket_name == "" ? format("%s-%s-%s-bucket", "${var.owner}", "${var.project}", "${var.environment}") : var.bucket_name
     Environment = var.environment
   }
 }
