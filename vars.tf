@@ -4,6 +4,12 @@ variable projects {
     code_provider = string
     repository_url = string
     repository_branch = string
+    elasticsearch = object({
+      create_elasticsearch = bool
+      domain_name = string
+      version = string
+      instance_type = string
+    })
   }))
 }
 

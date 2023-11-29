@@ -45,3 +45,18 @@ module "codebuild" {
   aws_private_subnets       = module.vpc.aws_public_subnets
   aws_vpc_id                = module.vpc.aws_vpc_id
 }
+
+module "elasticsearch" {
+  source                    = "./modules/elasticsearch"
+  for_each = {
+    for project in var.projects:  project.name => project
+    if project.elasticsearch.create_elasticsearch == true
+  }
+
+  project                   = each.value.name
+  owner                     = var.owner
+  environment               = var.environment
+  domain_name               = each.value.elasticsearch.domain_name
+  instance_type             = each.value.elasticsearch.instance_type
+  version                   = each.value.elasticsearch.version
+}
