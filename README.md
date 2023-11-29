@@ -67,11 +67,11 @@ Plan and show all changes in your project.
 $ terraform plan -var-file=path/project-vars.tfvars -out path/project.bin
 ```
 
-### 4- Apply your project in AWS 
-Apply all project changes in AWS. 
+### 4- Apply your project 
+Apply all the changes made to your project on AWS. 
 
 ```bash
-$ terraform apply path/staging.bin
+$ terraform apply path/project.bin
 ```
 
 ### 5- How to destroy your project in AWS 
