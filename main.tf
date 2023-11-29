@@ -58,5 +58,5 @@ module "elasticsearch" {
   environment               = var.environment
   domain_name               = each.value.elasticsearch.domain_name
   instance_type             = each.value.elasticsearch.instance_type
-  version                   = each.value.elasticsearch.version
+  elastichsearch_version    = each.value.elasticsearch.version
 }
