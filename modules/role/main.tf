@@ -70,17 +70,17 @@ resource "aws_iam_policy" "ecr" {
   policy = data.aws_iam_policy_document.ecr.json
 }
 
-data "aws_iam_policy_document" "elb" {
+data "aws_iam_policy_document" "elb-es" {
   statement {
-    actions   = ["elasticloadbalancing:CreateListener", "elasticloadbalancing:CreateLoadBalancer", "elasticloadbalancing:CreateTargetGroup", "elasticloadbalancing:DescribeListeners", "elasticloadbalancing:DescribeLoadBalancers", "elasticloadbalancing:DescribeTargetGroups", "elasticloadbalancing:AddTags"]
+    actions   = ["elasticloadbalancing:CreateListener", "elasticloadbalancing:CreateLoadBalancer", "elasticloadbalancing:CreateTargetGroup", "elasticloadbalancing:DescribeListeners", "elasticloadbalancing:DescribeLoadBalancers", "elasticloadbalancing:DescribeTargetGroups", "elasticloadbalancing:AddTags", "es:CreateDomain", "es:CreateElasticsearch*", "es:DeleteDomain", "es:DeleteElasticsearch*"]
     resources = ["*"]
     effect    = "Allow"
   }
 }
 
-resource "aws_iam_policy" "elb" {
-  name   = format("%s-%s-%s-elb", "${var.owner}", "${var.project}", "${var.environment}")
-  policy = data.aws_iam_policy_document.elb.json
+resource "aws_iam_policy" "elb-es" {
+  name   = format("%s-%s-%s-elb-es", "${var.owner}", "${var.project}", "${var.environment}")
+  policy = data.aws_iam_policy_document.elb-es.json
 }
 
  data "aws_iam_policy_document" "iam" {
@@ -183,9 +183,9 @@ resource "aws_iam_role_policy_attachment" "ecr" {
   policy_arn = aws_iam_policy.ecr.arn
 }
 
-resource "aws_iam_role_policy_attachment" "elb" {
+resource "aws_iam_role_policy_attachment" "elb-es" {
   role       = aws_iam_role.codebuild_role.name
-  policy_arn = aws_iam_policy.elb.arn
+  policy_arn = aws_iam_policy.elb-es.arn
 }
 
 resource "aws_iam_role_policy_attachment" "iam" {
@@ -251,9 +251,9 @@ resource "aws_iam_role_policy_attachment" "ecr_for-ecs" {
   policy_arn = aws_iam_policy.ecr.arn
 }
 
-resource "aws_iam_role_policy_attachment" "elb_for-ecs" {
+resource "aws_iam_role_policy_attachment" "elb-es_for-ecs" {
   role       = aws_iam_role.ecs_role.name
-  policy_arn = aws_iam_policy.elb.arn
+  policy_arn = aws_iam_policy.elb-es.arn
 }
 
 resource "aws_iam_role_policy_attachment" "iam_for-ecs" {

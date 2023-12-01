@@ -6,6 +6,11 @@ resource "aws_elasticsearch_domain" "elasticsearch" {
     instance_type = var.instance_type
   }
 
+  ebs_options {
+    ebs_enabled = var.ebs_enabled
+    volume_size = var.volume_size
+  }
+
   tags = {
     Domain = var.domain_name
     environment = var.environment

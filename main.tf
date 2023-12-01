@@ -59,4 +59,6 @@ module "elasticsearch" {
   domain_name               = each.value.elasticsearch.domain_name
   instance_type             = each.value.elasticsearch.instance_type
   elastichsearch_version    = each.value.elasticsearch.version
+  ebs_enabled               = each.value.elasticsearch.ebs_enabled
+  volume_size               = each.value.elasticsearch.volume_size
 }

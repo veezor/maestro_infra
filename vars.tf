@@ -9,6 +9,8 @@ variable projects {
       domain_name = string
       version = string
       instance_type = string
+      ebs_enabled = bool
+      volume_size = number
     })
   }))
 }
