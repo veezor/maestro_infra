@@ -11,13 +11,18 @@ provider "aws" {
   region = var.region
 }
 
+locals {
+  subnet_cidrs = cidrsubnets(var.vpc_cidr_block, 8, 8, 8, 8, 8, 8)
+}
+
 module "vpc" {
   source = "./modules/vpc"
 
   # Common
-  owner          = var.owner
-  environment    = var.environment
-  vpc_cidr_block = var.vpc_cidr_block
+  owner              = var.owner
+  environment        = var.environment
+  vpc_cidr_block     = var.vpc_cidr_block
+  subnets_cidr_block = local.subnet_cidrs
 }
  
 module "projects" {

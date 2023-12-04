@@ -228,4 +228,5 @@ module "rds" {
   aws_vpc_id            = var.aws_vpc_id
   environment           = var.environment
   app_security_group_id = aws_security_group.app.id
+  private_subnet_ids    = var.aws_private_subnets
 }

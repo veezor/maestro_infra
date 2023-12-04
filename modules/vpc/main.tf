@@ -1,7 +1,3 @@
-locals {
-  subnet_cidrs = cidrsubnets(aws_vpc.vpc.cidr_block, 8, 8, 8, 8, 8, 8)
-}
-
 resource "aws_vpc" "vpc" {
   cidr_block           = var.vpc_cidr_block
   enable_dns_hostnames = true
@@ -18,7 +14,7 @@ resource "aws_vpc" "vpc" {
 resource "aws_subnet" "public_subnets" {
   for_each   = { for idx in range(3) : idx => true }
   vpc_id     = aws_vpc.vpc.id
-  cidr_block = local.subnet_cidrs[each.key]
+  cidr_block = var.subnets_cidr_block[each.key]
 
   tags = {
     "Name"        = format("%s-%s-public%s", "${var.owner}", "${var.environment}", each.key)
@@ -30,7 +26,7 @@ resource "aws_subnet" "public_subnets" {
 resource "aws_subnet" "private_subnets" {
   for_each   = { for idx in range(3) : idx => true }
   vpc_id     = aws_vpc.vpc.id
-  cidr_block = local.subnet_cidrs[each.key + 3]
+  cidr_block = var.subnets_cidr_block[each.key + 3]
 
   tags = {
     "Name"        = format("%s-%s-private%s", "${var.owner}", "${var.environment}", each.key)
