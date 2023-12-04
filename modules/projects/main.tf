@@ -229,4 +229,6 @@ module "rds" {
   environment           = var.environment
   app_security_group_id = aws_security_group.app.id
   private_subnet_ids    = var.aws_private_subnets
+  master_username       = each.value.master_username
+  master_password       = each.value.master_password
 }

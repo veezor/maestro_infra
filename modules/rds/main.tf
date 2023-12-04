@@ -32,8 +32,8 @@ resource "aws_rds_cluster" "cluster" {
   engine_version            = var.engine_version
   database_name             = var.project
   db_subnet_group_name      = aws_db_subnet_group.sg.name
-  master_username           = "test3334444"
-  master_password           = "t35t4nd0000"
+  master_username           = var.master_username
+  master_password           = var.master_password
 }
 
 output "db-password" {

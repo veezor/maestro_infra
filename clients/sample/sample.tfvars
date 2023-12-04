@@ -15,6 +15,8 @@ projects        = [
                 engine          =  "aurora-mysql",
                 engine_version  = "5.7"
                 instance_class  = "db.t4g.medium"
+                master_username = "test3334444"
+                master_password = "t35t4nd0000"
             }
         ]
     },
