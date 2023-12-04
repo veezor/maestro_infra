@@ -26,6 +26,4 @@ projects        = [
         repository_url      = "https://bitbucket.org/owner/frontend"
         repository_branch   = "staging",
         databases           = []
-        master_username = ""
-        master_password = ""
     }]
