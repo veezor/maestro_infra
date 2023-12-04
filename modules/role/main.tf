@@ -8,7 +8,7 @@ data "aws_iam_policy_document" "codebuild" {
 }
 
 resource "aws_iam_policy" "codebuild" {
-  name   = format("%s-%s-%s-codebuild", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-%s-codebuild", "${var.owner}", "${var.project_name}", "${var.environment}")
   policy = data.aws_iam_policy_document.codebuild.json
 }
 
@@ -21,7 +21,7 @@ data "aws_iam_policy_document" "cloudwatch-ssm" {
 }
 
 resource "aws_iam_policy" "cloudwatch-ssm" {
-  name   = format("%s-%s-%s-cloudwatch-ssm", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-%s-cloudwatch-ssm", "${var.owner}", "${var.project_name}", "${var.environment}")
   policy = data.aws_iam_policy_document.cloudwatch-ssm.json
 }
 
@@ -34,7 +34,7 @@ data "aws_iam_policy_document" "ecs" {
 }
 
 resource "aws_iam_policy" "ecs" {
-  name   = format("%s-%s-%s-ecs", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-%s-ecs", "${var.owner}", "${var.project_name}", "${var.environment}")
   policy = data.aws_iam_policy_document.ecs.json
 }
 
@@ -53,7 +53,7 @@ data "aws_iam_policy_document" "ec2-autoscaling" {
 }
 
 resource "aws_iam_policy" "ec2-autoscaling" {
-  name   = format("%s-%s-%s-ec2-autoscaling", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-%s-ec2-autoscaling", "${var.owner}", "${var.project_name}", "${var.environment}")
   policy = data.aws_iam_policy_document.ec2-autoscaling.json
 }
 
@@ -66,7 +66,7 @@ data "aws_iam_policy_document" "ecr" {
 }
 
 resource "aws_iam_policy" "ecr" {
-  name   = format("%s-%s-%s-ecr", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-%s-ecr", "${var.owner}", "${var.project_name}", "${var.environment}")
   policy = data.aws_iam_policy_document.ecr.json
 }
 
@@ -79,7 +79,7 @@ data "aws_iam_policy_document" "elb" {
 }
 
 resource "aws_iam_policy" "elb" {
-  name   = format("%s-%s-%s-elb", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-%s-elb", "${var.owner}", "${var.project_name}", "${var.environment}")
   policy = data.aws_iam_policy_document.elb.json
 }
 
@@ -97,7 +97,7 @@ resource "aws_iam_policy" "elb" {
  }
  
 resource "aws_iam_policy" "iam" {
-  name   = format("%s-%s-%s-iam", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-%s-iam", "${var.owner}", "${var.project_name}", "${var.environment}")
   policy = data.aws_iam_policy_document.iam.json
 }
 
@@ -110,7 +110,7 @@ data "aws_iam_policy_document" "kms" {
 }
  
 resource "aws_iam_policy" "kms" {
-  name   = format("%s-%s-%s-kms", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-%s-kms", "${var.owner}", "${var.project_name}", "${var.environment}")
   policy = data.aws_iam_policy_document.kms.json
 }
 
@@ -123,25 +123,25 @@ data "aws_iam_policy_document" "s3" {
 }
  
 resource "aws_iam_policy" "s3" {
-  name   = format("%s-%s-%s-s3", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-%s-s3", "${var.owner}", "${var.project_name}", "${var.environment}")
   policy = data.aws_iam_policy_document.s3.json
 }
 
 data "aws_iam_policy_document" "sm" {
   statement {
     actions   = ["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"]
-    resources = ["arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${var.environment}/${var.owner}-${var.project}*"]
+    resources = ["arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${var.environment}/${var.owner}-${var.project_name}*"]
     effect    = "Allow"
   }
 }
  
 resource "aws_iam_policy" "sm" {
-  name   = format("%s-%s-%s-sm", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-%s-sm", "${var.owner}", "${var.project_name}", "${var.environment}")
   policy = data.aws_iam_policy_document.sm.json
 }
 
 resource "aws_iam_role" "role" {
-  name               = format("%s-%s-%s-Maestro", "${var.owner}", "${var.project}", "${var.environment}")
+  name               = format("%s-%s-%s-Maestro", "${var.owner}", "${var.project_name}", "${var.environment}")
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
