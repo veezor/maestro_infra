@@ -41,7 +41,7 @@ module "projects" {
   environment         = var.environment
   maestro_image       = var.maestro_image
   aws_public_subnets  = module.vpc.aws_public_subnets
-  aws_private_subnets = module.vpc.aws_public_subnets
+  aws_private_subnets = module.vpc.aws_private_subnets
   aws_vpc_id          = module.vpc.aws_vpc_id
   vpc_cidr_block      = var.vpc_cidr_block
   region              = var.region

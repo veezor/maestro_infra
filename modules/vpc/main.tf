@@ -66,8 +66,7 @@ resource "aws_nat_gateway" "ng" {
   }
 }
 
-resource "aws_route_table" "public_rt" {
-  for_each   = { for idx in range(3) : idx => true }
+resource "aws_route_table" "public_rt_1" {
   vpc_id = aws_vpc.vpc.id
 
   route {
@@ -81,14 +80,53 @@ resource "aws_route_table" "public_rt" {
   }
 
   tags = {
-    "Name"        = format("%s-%s/%s%s", "${var.owner}", "${var.environment}", "public", each.key + 1)
+    "Name"        = format("%s-%s/%s1", "${var.owner}", "${var.environment}", "public")
     "Owner"       = "${var.owner}"
     "Environment" = "${var.environment}"
   }
 }
 
-resource "aws_route_table" "private_rt" {
-  for_each   = { for idx in range(3) : idx => true }
+resource "aws_route_table" "public_rt_2" {
+  vpc_id = aws_vpc.vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.ig.id
+  }
+
+  route {
+    cidr_block = var.vpc_cidr_block
+    gateway_id = "local" 
+  }
+
+  tags = {
+    "Name"        = format("%s-%s/%s2", "${var.owner}", "${var.environment}", "public")
+    "Owner"       = "${var.owner}"
+    "Environment" = "${var.environment}"
+  }
+}
+
+resource "aws_route_table" "public_rt_3" {
+  vpc_id = aws_vpc.vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.ig.id
+  }
+
+  route {
+    cidr_block = var.vpc_cidr_block
+    gateway_id = "local" 
+  }
+
+  tags = {
+    "Name"        = format("%s-%s/%s3", "${var.owner}", "${var.environment}", "public")
+    "Owner"       = "${var.owner}"
+    "Environment" = "${var.environment}"
+  }
+}
+
+resource "aws_route_table" "private_rt_1" {
   vpc_id = aws_vpc.vpc.id
 
   route {
@@ -102,22 +140,86 @@ resource "aws_route_table" "private_rt" {
   }
 
   tags = {
-    "Name"        = format("%s-%s/%s%s", "${var.owner}", "${var.environment}", "private", each.key + 1)
+    "Name"        = format("%s-%s/%s1", "${var.owner}", "${var.environment}", "private")
     "Owner"       = "${var.owner}"
     "Environment" = "${var.environment}"
   }
 }
 
-resource "aws_route_table_association" "public_association" {
-  for_each       = { for idx in range(3) : idx => true }
-  subnet_id      = aws_subnet.public_subnets[each.key].id
-  route_table_id = aws_route_table.public_rt[each.key].id
+resource "aws_route_table" "private_rt_2" {
+  vpc_id = aws_vpc.vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.ng.id
+  }
+
+  route {
+    cidr_block = var.vpc_cidr_block
+    nat_gateway_id = "local" 
+  }
+
+  tags = {
+    "Name"        = format("%s-%s/%s2", "${var.owner}", "${var.environment}", "private")
+    "Owner"       = "${var.owner}"
+    "Environment" = "${var.environment}"
+  }
 }
 
-resource "aws_route_table_association" "private_association" {
-  for_each       = { for idx in range(3) : idx => true }
-  subnet_id      = aws_subnet.private_subnets[each.key].id
-  route_table_id = aws_route_table.private_rt[each.key].id
+resource "aws_route_table" "private_rt_3" {
+  vpc_id = aws_vpc.vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.ng.id
+  }
+
+  route {
+    cidr_block = var.vpc_cidr_block
+    nat_gateway_id = "local" 
+  }
+
+  tags = {
+    "Name"        = format("%s-%s/%s3", "${var.owner}", "${var.environment}", "private")
+    "Owner"       = "${var.owner}"
+    "Environment" = "${var.environment}"
+  }
+}
+
+resource "aws_route_table_association" "public_association1" {
+  count = 1
+  subnet_id      = aws_subnet.public_subnets[count.index].id
+  route_table_id = aws_route_table.public_rt_1.id
+}
+
+resource "aws_route_table_association" "public_association2" {
+  count = 1
+  subnet_id      = aws_subnet.public_subnets[count.index + 1].id
+  route_table_id = aws_route_table.public_rt_2.id
+}
+
+resource "aws_route_table_association" "public_association3" {
+  count = 1
+  subnet_id      = aws_subnet.public_subnets[count.index + 2].id
+  route_table_id = aws_route_table.public_rt_3.id
+}
+
+resource "aws_route_table_association" "private_association1" {
+  count = 1
+  subnet_id      = aws_subnet.private_subnets[count.index].id
+  route_table_id = aws_route_table.private_rt_1.id
+}
+
+resource "aws_route_table_association" "private_association2" {
+  count = 1
+  subnet_id      = aws_subnet.private_subnets[count.index + 1].id
+  route_table_id = aws_route_table.private_rt_2.id
+}
+
+resource "aws_route_table_association" "private_association3" {
+  count = 1
+  subnet_id      = aws_subnet.private_subnets[count.index + 2].id
+  route_table_id = aws_route_table.private_rt_3.id
 }
 
 output "aws_public_subnets" {

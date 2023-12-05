@@ -19,7 +19,7 @@ projects        = [
                 master_password = "t35t4nd0000"
             }
         ]
-    },
+    }
     {
         project_name        = "frontend"
         code_provider       = "BITBUCKET"
