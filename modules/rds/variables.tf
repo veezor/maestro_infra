@@ -4,6 +4,7 @@ variable environment {}
 variable engine {}
 variable engine_version {}
 variable availability_zones {}
+variable instance_class {}
 variable master_username {}
 variable master_password {}
 variable backup_retention_period {}

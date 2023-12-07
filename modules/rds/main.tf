@@ -1,6 +1,6 @@
 locals {
   snapshot_date = element(split(":", timestamp()), 0)
-  map_app_id = tomap(var.app_id)
+  map_app_id    = tomap(var.app_id)
 }
 
 resource "aws_security_group" "db" {
@@ -21,7 +21,7 @@ resource "aws_rds_cluster_instance" "instances" {
   count              = var.number_of_instances
   identifier         = format("%s-%s-%s-instance%s", "${var.owner}", "${var.project}", "${var.environment}", "${count.index}")
   cluster_identifier = aws_rds_cluster.cluster.id
-  instance_class     = "db.t4g.medium"
+  instance_class     = var.instance_class
   engine             = aws_rds_cluster.cluster.engine
   engine_version     = aws_rds_cluster.cluster.engine_version
 }

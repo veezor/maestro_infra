@@ -12,7 +12,7 @@ provider "aws" {
 }
 
 module "vpc" {
-  source = "./modules/vpc"
+  source         = "./modules/vpc"
   owner          = var.owner
   environment    = var.environment
   vpc_cidr_block = var.vpc_cidr_block
@@ -47,7 +47,7 @@ module "codebuild" {
 }
 
 module "rds" {
-  source                    = "./modules/rds"
+  source                        = "./modules/rds"
   for_each = {
     for project in var.projects:  project.name => project
     if project.rds.create_rds == true
@@ -62,6 +62,7 @@ module "rds" {
   master_username               = each.value.rds.master_username
   master_password               = each.value.rds.master_password
   backup_retention_period       = each.value.rds.backup_retention_period
+  instance_class                = each.value.instance_class
   preferred_backup_window       = each.value.rds.preferred_backup_window
   number_of_instances           = each.value.rds.number_of_instances
   aws_vpc_id                    = module.vpc.aws_vpc_id

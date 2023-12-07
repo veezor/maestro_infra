@@ -13,6 +13,7 @@ variable projects {
       master_password = string
       backup_retention_period = string
       preferred_backup_window = string
+      instance_class = string
       number_of_instances = number 
     })
   }))
