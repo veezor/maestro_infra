@@ -1,18 +1,15 @@
 variable projects {
   type = list(object({
-    name = string
+    project_name = string
     code_provider = string
     repository_url = string
     repository_branch = string
-    create_rds = bool
-    rds_engine = string
-    rds_engine_version = string
-    rds_availability_zones = list(string)
-    rds_master_username = string
-    rds_master_password = string
-    rds_backup_retention_period = string
-    rds_preferred_backup_window = string
-    number_of_instances = number
+    databases = list(object({
+      identifier = string
+      engine = string
+      engine_version = string
+      instance_class = string
+    }))
   }))
 }
 

@@ -1,15 +1,19 @@
+locals {
+  snapshot_date = element(split(":", timestamp()), 0)
+}
+
 resource "aws_security_group" "app" {
-  name   = format("%s-%s-%s-app", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-%s-app", "${var.owner}", "${var.project_name}", "${var.environment}")
   vpc_id = var.aws_vpc_id
 }
 
 resource "aws_security_group" "lb" {
-  name   = format("%s-%s-%s-lb", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-%s-lb", "${var.owner}", "${var.project_name}", "${var.environment}")
   vpc_id = var.aws_vpc_id
 }
 
 resource "aws_security_group" "codebuild" {
-  name   = format("%s-%s-%s-codebuild", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-%s-codebuild", "${var.owner}", "${var.project_name}", "${var.environment}")
   vpc_id = var.aws_vpc_id
 }
 
@@ -23,12 +27,12 @@ resource "aws_security_group_rule" "app_inbound_lb_3000" {
 }
 
 resource "aws_security_group_rule" "app_outbound_all_traffic" {
-  type                     = "egress"
-  from_port                = 0
-  to_port                  = 0
-  protocol                 = "all"
-  security_group_id        = aws_security_group.app.id
-  cidr_blocks = ["0.0.0.0/0"]
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "all"
+  security_group_id = aws_security_group.app.id
+  cidr_blocks       = ["0.0.0.0/0"]
 }
 
 resource "aws_security_group_rule" "lb_inbound_443" {
@@ -68,14 +72,24 @@ resource "aws_security_group_rule" "codebuild_outbound_all_traffic" {
 }
 
 resource "aws_cloudwatch_log_group" "lg" {
-  name              = format("/aws/codebuild/%s-%s-%s", "${var.owner}", "${var.project}", "${var.environment}")
+  name              = format("/aws/codebuild/%s-%s-%s", "${var.owner}", "${var.project_name}", "${var.environment}")
   retention_in_days = 7
 }
 
+module "role" {
+  source         = "../../modules/role"
+ 
+  project_name   = var.project_name
+  owner          = var.owner
+  environment    = var.environment
+  vpc_cidr_block = var.vpc_cidr_block
+  region         = var.region
+ }
+
 resource "aws_codebuild_project" "cb" {
-  name           = format("%s-%s-%s", "${var.owner}", "${var.project}", "${var.environment}")
+  name           = format("%s-%s-%s", "${var.owner}", "${var.project_name}", "${var.environment}")
   description    = "Maestro"
-  service_role   = var.aws_iam_role
+  service_role   = module.role.role_arn
   source_version = var.repository_branch
   source {
     type     = var.code_provider
@@ -116,7 +130,7 @@ EOF
     }
     environment_variable {
       name  = "ECS_EXECUTION_ROLE_ARN"
-      value = var.aws_iam_role
+      value = module.role.role_arn
     }
     environment_variable {
       name  = "ECS_SERVICE_SECURITY_GROUPS"
@@ -132,7 +146,7 @@ EOF
     }
     environment_variable {
       name  = "ECS_TASK_ROLE_ARN"
-      value = var.aws_iam_role
+      value = module.role.role_arn
     }
     environment_variable {
       name  = "MAESTRO_BRANCH_OVERRIDE"
@@ -156,7 +170,7 @@ EOF
     }
     environment_variable {
       name  = "WORKLOAD_RESOURCE_TAGS"
-      value = format("Owner=%s,Project=%s,Environment=%s", var.owner, var.project, var.environment)
+      value = format("Owner=%s,Project=%s,Environment=%s", var.owner, var.project_name, var.environment)
     }
     environment_variable {
       name  = "WORKLOAD_VPC_ID"
@@ -164,7 +178,7 @@ EOF
     }
     environment_variable {
       name  = "MAESTRO_REPO_OVERRIDE"
-      value = format("%s/%s", var.owner, var.project)
+      value = format("%s/%s", var.owner, var.project_name)
     }    
 
   }
@@ -184,7 +198,7 @@ EOF
 }
 
 resource "aws_secretsmanager_secret" "secret" {
-  name = format("%s/%s-%s", "${var.environment}", "${var.owner}", "${var.project}")
+  name = format("%s/%s-%s", "${var.environment}", "${var.owner}", "${var.project_name}")
 }
 
 resource "aws_secretsmanager_secret_version" "content" {
@@ -192,15 +206,26 @@ resource "aws_secretsmanager_secret_version" "content" {
 
   secret_string = jsonencode({
     PORT = "3000",
-    TASK_ROLE_ARN = var.aws_iam_role,
-    EXECUTION_ROLE_ARN = var.aws_iam_role
+    TASK_ROLE_ARN = module.role.role_arn,
+    EXECUTION_ROLE_ARN = module.role.role_arn
   })
 }
 
 resource "aws_ecr_repository" "ecr_repository" {
-  name = format("%s-%s-%s", "${var.owner}", "${var.project}", "${var.environment}")
+  name = format("%s-%s-%s", "${var.owner}", "${var.project_name}", "${var.environment}")
 }
 
-output "security_group_id" {
-  value = aws_security_group.app.*.id
+
+module "rds" {
+  source                    = "../../modules/rds"
+  for_each = {for database in var.databases: database.identifier => database}
+
+  identifier            = each.value.identifier
+  engine                = each.value.engine
+  engine_version        = each.value.engine_version
+  project               = var.project_name
+  owner                 = var.owner
+  aws_vpc_id            = var.aws_vpc_id
+  environment           = var.environment
+  app_security_group_id = aws_security_group.app.id
 }
