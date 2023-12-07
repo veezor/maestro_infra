@@ -15,6 +15,8 @@ projects        = [
                 engine          =  "aurora-mysql",
                 engine_version  = "5.7"
                 instance_class  = "db.t4g.medium"
+                master_username = ""
+                master_password = ""
             }
         ]
     },
@@ -24,5 +26,6 @@ projects        = [
         repository_url      = "https://bitbucket.org/owner/frontend"
         repository_branch   = "staging",
         databases           = []
-    }
-]
+        master_username = ""
+        master_password = ""
+    }]

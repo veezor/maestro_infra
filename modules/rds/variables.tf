@@ -1,4 +1,3 @@
-
 variable "identifier" {}
 variable "environment" {}
 variable "owner" {}
@@ -7,3 +6,6 @@ variable "aws_vpc_id" {}
 variable "engine" {}
 variable "engine_version" {}
 variable "app_security_group_id" {}
+variable "private_subnet_ids" {}
+variable "master_password" {}
+variable "master_username" {}

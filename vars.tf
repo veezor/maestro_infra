@@ -9,6 +9,8 @@ variable projects {
       engine = string
       engine_version = string
       instance_class = string
+      master_username = string
+      master_password = string
     }))
   }))
 }

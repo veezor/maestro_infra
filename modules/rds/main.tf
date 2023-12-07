@@ -12,6 +12,11 @@ resource "aws_security_group_rule" "db_inbound" {
   source_security_group_id = var.app_security_group_id
 }
 
+resource "aws_db_subnet_group" "sg" {
+  name       = format("%s-%s-%s-subnet-group", "${var.owner}", "${var.project}", "${var.environment}")
+  subnet_ids = var.private_subnet_ids
+}
+
 resource "aws_rds_cluster_instance" "instances" {
   count              = 1
   identifier         = format("%s-%s-%s-instance%s", "${var.owner}", "${var.project}", "${var.environment}", "${count.index}")
@@ -26,6 +31,10 @@ resource "aws_rds_cluster" "cluster" {
   engine                    = var.engine
   engine_version            = var.engine_version
   database_name             = var.project
+  db_subnet_group_name      = aws_db_subnet_group.sg.name
+  master_username           = var.master_username
+  master_password           = var.master_password
+  skip_final_snapshot       = true
 }
 
 output "db-password" {
