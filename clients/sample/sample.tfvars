@@ -20,11 +20,11 @@ projects        = [
             }
         ]
     }
-    {
-        project_name        = "frontend"
-        code_provider       = "BITBUCKET"
-        repository_url      = "https://bitbucket.org/owner/frontend"
-        repository_branch   = "staging",
-        databases           = []
-    }
+    //{
+    //    project_name        = "frontend"
+    //    code_provider       = "BITBUCKET"
+    //    repository_url      = "https://bitbucket.org/owner/frontend"
+    //    repository_branch   = "staging",
+    //    databases           = []
+    //}
 ]

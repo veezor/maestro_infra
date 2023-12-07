@@ -26,15 +26,15 @@ module "vpc" {
 }
  
 module "projects" {
-  source            = "./modules/projects"
-  for_each          = {for project in var.projects: project.project_name => project}
+  source              = "./modules/projects"
+  for_each            = {for project in var.projects: project.project_name => project}
 
   # Project
-  project_name      = each.value.project_name
-  code_provider     = each.value.code_provider
-  repository_url    = each.value.repository_url
-  repository_branch = each.value.repository_branch
-  databases         = each.value.databases
+  project_name        = each.value.project_name
+  code_provider       = each.value.code_provider
+  repository_url      = each.value.repository_url
+  repository_branch   = each.value.repository_branch
+  databases           = each.value.databases
   
   # Common
   owner               = var.owner

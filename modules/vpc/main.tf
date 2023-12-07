@@ -11,10 +11,15 @@ resource "aws_vpc" "vpc" {
   }
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_subnet" "public_subnets" {
-  for_each   = { for idx in range(3) : idx => true }
-  vpc_id     = aws_vpc.vpc.id
-  cidr_block = var.subnets_cidr_block[each.key]
+  for_each          = { for idx in range(3) : idx => true }
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = var.subnets_cidr_block[each.key]
+  availability_zone = data.aws_availability_zones.available.names[each.key]
 
   tags = {
     "Name"        = format("%s-%s-public%s", "${var.owner}", "${var.environment}", each.key)
@@ -24,9 +29,10 @@ resource "aws_subnet" "public_subnets" {
 }
 
 resource "aws_subnet" "private_subnets" {
-  for_each   = { for idx in range(3) : idx => true }
-  vpc_id     = aws_vpc.vpc.id
-  cidr_block = var.subnets_cidr_block[each.key + 3]
+  for_each          = { for idx in range(3) : idx => true }
+  vpc_id            = aws_vpc.vpc.id
+  cidr_block        = var.subnets_cidr_block[each.key + 3]
+  availability_zone = data.aws_availability_zones.available.names[each.key]
 
   tags = {
     "Name"        = format("%s-%s-private%s", "${var.owner}", "${var.environment}", each.key)
