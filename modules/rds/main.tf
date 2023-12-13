@@ -34,7 +34,7 @@ resource "aws_rds_cluster" "cluster" {
   db_subnet_group_name      = aws_db_subnet_group.sg.name
   master_username           = var.master_username
   master_password           = var.master_password
-  skip_final_snapshot       = true
+  skip_final_snapshot       = var.skip_final_snapshot
 }
 
 output "db-password" {

@@ -231,4 +231,5 @@ module "rds" {
   private_subnet_ids    = var.aws_private_subnets
   master_username       = each.value.master_username
   master_password       = each.value.master_password
+  skip_final_snapshot   = each.value.skip_final_snapshot
 }

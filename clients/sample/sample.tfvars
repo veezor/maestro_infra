@@ -11,12 +11,13 @@ projects        = [
         repository_branch   = "staging",
         databases           = [
             {
-                identifier      = "backend",
-                engine          =  "aurora-mysql",
-                engine_version  = "5.7"
-                instance_class  = "db.t4g.medium"
-                master_username = ""
-                master_password = ""
+                identifier          = "backend",
+                engine              =  "aurora-mysql",
+                engine_version      = "5.7"
+                instance_class      = "db.t4g.medium"
+                master_username     = ""
+                master_password     = ""
+                skip_final_snapshot = ""
             }
         ]
     },

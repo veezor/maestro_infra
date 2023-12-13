@@ -9,3 +9,4 @@ variable "app_security_group_id" {}
 variable "private_subnet_ids" {}
 variable "master_password" {}
 variable "master_username" {}
+variable "skip_final_snapshot" {}
