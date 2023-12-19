@@ -89,7 +89,7 @@ module "role" {
 resource "aws_codebuild_project" "cb" {
   name           = format("%s-%s-%s", "${var.owner}", "${var.project_name}", "${var.environment}")
   description    = "Maestro"
-  service_role   = module.role.role_arn
+  service_role   = module.role.codebuild_role_arn
   source_version = var.repository_branch
   source {
     type     = var.code_provider
@@ -130,7 +130,7 @@ EOF
     }
     environment_variable {
       name  = "ECS_EXECUTION_ROLE_ARN"
-      value = module.role.role_arn
+      value = module.role.ecs_role_arn
     }
     environment_variable {
       name  = "ECS_SERVICE_SECURITY_GROUPS"
@@ -146,7 +146,7 @@ EOF
     }
     environment_variable {
       name  = "ECS_TASK_ROLE_ARN"
-      value = module.role.role_arn
+      value = module.role.ecs_role_arn
     }
     environment_variable {
       name  = "MAESTRO_BRANCH_OVERRIDE"
@@ -206,8 +206,8 @@ resource "aws_secretsmanager_secret_version" "content" {
 
   secret_string = jsonencode({
     PORT = "3000",
-    TASK_ROLE_ARN = module.role.role_arn,
-    EXECUTION_ROLE_ARN = module.role.role_arn
+    TASK_ROLE_ARN = module.role.ecs_role_arn,
+    EXECUTION_ROLE_ARN = module.role.ecs_role_arn
   })
 }
 

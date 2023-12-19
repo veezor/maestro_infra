@@ -279,3 +279,7 @@ resource "aws_iam_role_policy_attachment" "sm_for-ecs" {
 output "codebuild_role_arn" {
   value = aws_iam_role.codebuild_role.arn
 }
+
+output "ecs_role_arn" {
+  value = aws_iam_role.ecs_role.arn
+}

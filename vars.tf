@@ -11,6 +11,7 @@ variable projects {
       instance_class = string
       master_username = string
       master_password = string
+      skip_final_snapshot = bool
     }))
   }))
 }

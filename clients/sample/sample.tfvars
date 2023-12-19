@@ -17,7 +17,7 @@ projects        = [
                 instance_class      = "db.t4g.medium"
                 master_username     = ""
                 master_password     = ""
-                skip_final_snapshot = ""
+                skip_final_snapshot = false
             }
         ]
     },
