@@ -54,7 +54,7 @@ $ export AWS_SECRET_ACCESS_KEY=your_secret_access_key
 ```
 
 ### 2- Init a Terraform project
-Initialize the terraform project, creating the **main.tf** and **var.tf** files.
+Initialize the terraform project, creating the **main.tf** and **vars.tf** files.
 
 ```bash
 $ terraform init -var-file=path/project-vars.tfvars
