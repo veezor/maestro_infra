@@ -45,6 +45,18 @@ projects = [
 
 ```
 
+## How works backend configuration
+With a backend configuration file you can pass a path for **.tfsate** and share with your team. In this project we utilize the S3 as destination for **.tfstate** file and is necessary a backend config file for set the bucket parameters.
+
+### Backend File example
+```bash
+bucket   = "bucket-name"
+key      = "backend/file/path"
+region   = "region"
+encrypt  = "value"
+profile  = "profile"
+```
+
 ### 1- Export AWS credentials 
 Export the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
 
