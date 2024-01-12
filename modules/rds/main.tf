@@ -1,3 +1,7 @@
+locals {
+  snapshot_date = element(split(":", timestamp()), 0)
+}
+
 resource "aws_security_group" "db" {
   name   = format("%s-%s-%s-db", "${var.owner}", "${var.project}", "${var.environment}")
   vpc_id = var.aws_vpc_id
@@ -36,6 +40,7 @@ resource "aws_rds_cluster" "cluster" {
   master_username           = var.master_username
   master_password           = var.master_password
   skip_final_snapshot       = var.skip_final_snapshot
+  final_snapshot_identifier = format("%s-%s-%s-cluster-%s", "${var.owner}", "${var.project}", "${var.environment}", "${local.snapshot_date}")
 }
 
 output "db-password" {
