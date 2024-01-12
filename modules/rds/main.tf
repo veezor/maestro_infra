@@ -21,9 +21,10 @@ resource "aws_rds_cluster_instance" "instances" {
   count              = 1
   identifier         = format("%s-%s-%s-instance%s", "${var.owner}", "${var.project}", "${var.environment}", "${count.index}")
   cluster_identifier = aws_rds_cluster.cluster.id
-  instance_class     = "db.t4g.medium"
+  instance_class     = var.instance_class
   engine             = aws_rds_cluster.cluster.engine
   engine_version     = aws_rds_cluster.cluster.engine_version
+  apply_immediately  = var.apply_immediately
 }
 
 resource "aws_rds_cluster" "cluster" {

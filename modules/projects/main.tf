@@ -221,6 +221,7 @@ module "rds" {
   for_each = {for database in var.databases: database.identifier => database}
 
   identifier            = each.value.identifier
+  instance_class        = each.value.instance_class
   engine                = each.value.engine
   engine_version        = each.value.engine_version
   project               = var.project_name
@@ -232,4 +233,5 @@ module "rds" {
   master_username       = each.value.master_username
   master_password       = each.value.master_password
   skip_final_snapshot   = each.value.skip_final_snapshot
+  apply_immediately     = each.value.apply_immediately
 }

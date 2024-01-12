@@ -10,3 +10,5 @@ variable "private_subnet_ids" {}
 variable "master_password" {}
 variable "master_username" {}
 variable "skip_final_snapshot" {}
+variable "instance_class" {}
+variable "apply_immediately" {}
