@@ -29,8 +29,7 @@ resource "aws_elasticache_subnet_group" "redis" {
 }
 
 resource "aws_elasticache_cluster" "redis" {
-  count                = 1
-  cluster_id           = format("%s-%s-%s-cluster%s", "${var.owner}", "${var.project}", "${var.environment}", "${count.index}")
+  cluster_id           = var.identifier
   engine               = var.engine
   node_type            = var.node_type
   num_cache_nodes      = var.num_cache_nodes

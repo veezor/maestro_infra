@@ -31,7 +31,7 @@ projects        = [
         databases           = []
         redis               = [
             {
-                identifier          = "frontend"
+                identifier          = "frontend-cluster"
                 engine              = "redis"
                 engine_version      = "7.0"
                 node_type           = "cache.t4g.micro"
