@@ -16,6 +16,8 @@ AWS services that you can create:
 - **Codebuild**
 - **ECR**
 - **SecretsManager**
+- **RDS**
+- **Redis** (Elasticache)
 
 ## Steps to init a new project 
 
