@@ -14,6 +14,15 @@ variable projects {
       skip_final_snapshot = bool
       apply_immediately = bool
     }))
+    redis = list(object({
+      identifier = string
+      engine = string
+      engine_version = string
+      node_type = string
+      num_cache_nodes = number
+      parameter_group = string 
+      apply_immediately = bool
+    }))
   }))
 }
 

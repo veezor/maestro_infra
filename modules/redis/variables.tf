@@ -1,0 +1,13 @@
+variable "identifier" {}
+variable "owner" {}
+variable "project" {}
+variable "environment" {}
+variable "engine" {}
+variable "engine_version" {}
+variable "node_type" {}
+variable "num_cache_nodes" {}
+variable "parameter_group" {}
+variable "subnet_ids" {}
+variable "sg_ids" {}
+variable "aws_vpc_id" {}
+variable "apply_immediately" {}
