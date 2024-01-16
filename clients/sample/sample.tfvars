@@ -10,7 +10,6 @@ projects        = [
         repository_url      = "https://github.com/owner/backend"
         repository_branch   = "staging",
         databases           = [
-<<<<<<< HEAD
             //{
             //    identifier          = "backend",
             //    engine              =  "aurora-mysql",
@@ -22,21 +21,7 @@ projects        = [
             //    apply_immediately   = true
             //}
         ]
-        elasticsearch       = []
-=======
-            {
-                identifier          = "backend",
-                engine              = "aurora-mysql",
-                engine_version      = "5.7"
-                instance_class      = "db.t3.medium"
-                master_username     = ""
-                master_password     = ""
-                skip_final_snapshot = false
-                apply_immediately   = true
-            }
-        ]
         redis               = []
->>>>>>> Refact redis module
     },
     {
         project_name        = "frontend"
@@ -44,7 +29,6 @@ projects        = [
         repository_url      = "https://bitbucket.org/owner/frontend"
         repository_branch   = "staging",
         databases           = []
-<<<<<<< HEAD
         elasticsearch       = [
             {
                 name = "frontend-site"
@@ -57,7 +41,6 @@ projects        = [
                     ebs_enabled = true
                     volume_size = 40
                 }
-=======
         redis               = [
             {
                 identifier          = "frontend-cluster"
@@ -67,7 +50,6 @@ projects        = [
                 num_cache_nodes     = 1
                 parameter_group     = "default.redis7"
                 apply_immediately   = true
->>>>>>> Refact redis module
             }
         ]
-    }]
+}]}
