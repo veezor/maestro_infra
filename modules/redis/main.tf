@@ -39,4 +39,8 @@ resource "aws_elasticache_cluster" "redis" {
   security_group_ids   = [ aws_security_group.redis.id ]
   subnet_group_name    = aws_elasticache_subnet_group.redis.name
   apply_immediately    = var.apply_immediately
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }

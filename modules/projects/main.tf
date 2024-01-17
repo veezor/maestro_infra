@@ -265,4 +265,5 @@ module "redis" {
   subnet_ids            = var.aws_private_subnets
   sg_ids                = [aws_security_group.app.id, aws_security_group.codebuild.id]
   apply_immediately     = each.value.apply_immediately
+  prevent_destroy       = each.value.prevent_destroy
 }
