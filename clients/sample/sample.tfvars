@@ -11,6 +11,21 @@ projects        = [
         repository_branch   = "staging",
         databases           = [
             {
+                identifier          = "backend"
+                engine              =  "aurora-mysql"
+                engine_version      = "5.7"
+                instance_class      = "db.t3.medium"
+                master_username     = ""
+                master_password     = ""
+                skip_final_snapshot = false
+                apply_immediately   = true
+            }
+        ]
+        s3                  = [
+            {
+                name  = "backend-buck3t"
+            },
+            {
                 identifier          = "backend",
                 engine              =  "aurora-mysql",
                 engine_version      = "5.7"
@@ -29,7 +44,7 @@ projects        = [
         project_name        = "frontend"
         code_provider       = "BITBUCKET"
         repository_url      = "https://bitbucket.org/owner/frontend"
-        repository_branch   = "staging",
+        repository_branch   = "staging"
         databases           = []
         elasticsearch       = [
             {
