@@ -7,4 +7,8 @@ resource "aws_s3_bucket" "bucket" {
     Project     = var.project
     Owner       = var.owner
   }
+
+  lifecycle {
+    prevent_destroy = false
+  }
 }
