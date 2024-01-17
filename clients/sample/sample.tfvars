@@ -21,6 +21,7 @@ projects        = [
                 apply_immediately   = true
             }
         ]
+        elasticsearch       = []
     },
     {
         project_name        = "frontend"
@@ -28,4 +29,18 @@ projects        = [
         repository_url      = "https://bitbucket.org/owner/frontend"
         repository_branch   = "staging",
         databases           = []
+        elasticsearch       = [
+            {
+                name = "frontend-site"
+                elasticsearch_version = "7.10"
+                cluster_config = {
+                    instance_type = "t3.small.elasticsearch"
+                    instance_count = 1
+                }
+                ebs_options = {
+                    ebs_enabled = true
+                    volume_size = 40
+                }
+            }
+        ]
     }]
