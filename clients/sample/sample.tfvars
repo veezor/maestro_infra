@@ -18,25 +18,13 @@ projects = [
         databases           = [
             {
                 identifier          = "backend"
-                engine              = "aurora-mysql"
+                engine              =  "aurora-mysql"
                 engine_version      = "5.7"
-                instance_class      = "db.t4g.medium"
-                master_username     = "Us35n4m3"
-                master_password     = "P4ssw05d"
+                instance_class      = "db.t3.medium"
+                master_username     = ""
+                master_password     = ""
                 skip_final_snapshot = false
                 apply_immediately   = true
-                snapshot_identifier = ""
-            }
-        ]
-        redis               = []
-        s3                  = [
-            {
-                name  = "trasfinal"
-                prevent_destroy  = true
-            },
-            {
-                name  = "middleend"
-                prevent_destroy  = true
             }
         ]
         s3                  = [
