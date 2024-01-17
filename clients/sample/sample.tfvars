@@ -29,7 +29,16 @@ projects = [
             }
         ]
         redis               = []
-        s3                  = []
+        s3                  = [
+            {
+                name  = "trasfinal"
+                prevent_destroy  = true
+            },
+            {
+                name  = "middleend"
+                prevent_destroy  = true
+            }
+        ]
         elasticsearch       = []
     },
     {
