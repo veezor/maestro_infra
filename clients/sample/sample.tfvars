@@ -17,8 +17,8 @@ projects = [
         repository_branch   = "staging",
         databases           = [
             {
-                identifier          = "backend"
-                engine              =  "aurora-mysql"
+                identifier          = "backend",
+                engine              =  "aurora-mysql",
                 engine_version      = "5.7"
                 instance_class      = "db.t3.medium"
                 master_username     = ""
@@ -29,12 +29,13 @@ projects = [
         ]
         s3                  = [
             {
-                name  = "backend-buck3t"
+                name  = "trasfinal"
             },
             {
                 name  = "middleend"
             }
         ]
+        redis               = []
         elasticsearch       = []
     },
     {
@@ -44,32 +45,8 @@ projects = [
         repository_url      = "https://bitbucket.org/owner/frontend"
         repository_branch   = "staging"
         databases           = []
-        elasticsearch       = [
-             {
-              name = "frontend-site"
-              elasticsearch_version = "7.10"
-              cluster_config = {
-                  instance_type = "t3.small.elasticsearch"
-                  instance_count = 1
-              }
-              ebs_options = {
-                  ebs_enabled = true
-                  volume_size = 40
-              }
-             }
-        ]
-        redis               = [
-            {
-                identifier          = "frontend-cluster"
-                engine              = "redis"
-                engine_version      = "7.0"
-                node_type           = "cache.t4g.micro"
-                num_cache_nodes     = 1
-                parameter_group     = "default.redis7"
-                apply_immediately   = true
-                prevent_destroy     = true
-            }
-        ]
         s3                  = []
+        redis               = []
+        elasticsearch       = []
     }
 ]
