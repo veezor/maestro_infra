@@ -38,6 +38,7 @@ projects        = [
                 num_cache_nodes     = 1
                 parameter_group     = "default.redis7"
                 apply_immediately   = true
+                prevent_destroy     = true
             }
         ]
     }]

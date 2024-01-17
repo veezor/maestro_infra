@@ -22,6 +22,7 @@ variable projects {
       num_cache_nodes = number
       parameter_group = string 
       apply_immediately = bool
+      prevent_destroy = bool
     }))
   }))
 }
