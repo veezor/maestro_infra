@@ -14,6 +14,9 @@ variable projects {
       skip_final_snapshot = bool
       apply_immediately = bool
     }))
+    s3 = list(object({
+      name = string
+    }))
   }))
 }
 

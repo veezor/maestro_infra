@@ -235,3 +235,13 @@ module "rds" {
   skip_final_snapshot   = each.value.skip_final_snapshot
   apply_immediately     = each.value.apply_immediately
 }
+
+module "s3" {
+  source                    = "../../modules/s3"
+  for_each = {for bucket in var.s3: bucket.name => bucket}
+
+  name                = each.value.name
+  environment               = var.environment
+  project                   = var.project_name
+  owner                     = var.owner
+}
