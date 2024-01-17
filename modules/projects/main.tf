@@ -281,19 +281,19 @@ module "redis" {
   source                    = "../../modules/redis"
   for_each = {for cluster in var.redis: cluster.identifier => cluster}
 
-  identifier            = each.value.identifier
-  engine                = each.value.engine
-  engine_version        = each.value.engine_version
-  project               = var.project_name
-  owner                 = var.owner
-  aws_vpc_id            = var.aws_vpc_id
-  environment           = var.environment
-  node_type             = each.value.node_type
-  num_cache_nodes       = each.value.num_cache_nodes
-  parameter_group       = each.value.parameter_group
-  subnet_ids            = var.aws_private_subnets
-  sg_ids                = [aws_security_group.app.id, aws_security_group.codebuild.id]
-  apply_immediately     = each.value.apply_immediately
+  identifier                = each.value.identifier
+  engine                    = each.value.engine
+  engine_version            = each.value.engine_version
+  project                   = var.project_name
+  owner                     = var.owner
+  aws_vpc_id                = var.aws_vpc_id
+  environment               = var.environment
+  node_type                 = each.value.node_type
+  num_cache_nodes           = each.value.num_cache_nodes
+  parameter_group           = each.value.parameter_group
+  subnet_ids                = var.aws_private_subnets
+  sg_ids                    = [aws_security_group.app.id, aws_security_group.codebuild.id]
+  apply_immediately         = each.value.apply_immediately
 }
 
 module "s3" {
