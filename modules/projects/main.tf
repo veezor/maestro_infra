@@ -234,4 +234,5 @@ module "rds" {
   master_password       = each.value.master_password
   skip_final_snapshot   = each.value.skip_final_snapshot
   apply_immediately     = each.value.apply_immediately
+  prevent_destroy       = each.value.prevent_destroy
 }

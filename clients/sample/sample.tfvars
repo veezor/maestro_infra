@@ -19,6 +19,7 @@ projects        = [
                 master_password     = ""
                 skip_final_snapshot = false
                 apply_immediately   = true
+                prevent_destroy   = true
             }
         ]
     },
