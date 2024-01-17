@@ -16,6 +16,7 @@ variable projects {
     }))
     s3 = list(object({
       name = string
+      prevent_destroy = bool
     }))
   }))
 }
