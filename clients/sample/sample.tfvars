@@ -24,9 +24,11 @@ projects        = [
         s3                  = [
             {
                 name  = "trasfinal"
+                prevent_destroy  = true
             },
             {
                 name  = "middleend"
+                prevent_destroy  = true
             }
         ]
         redis               = []
