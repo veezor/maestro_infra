@@ -242,6 +242,7 @@ module "elasticsearch" {
 
   name                      = each.value.name
   elasticsearch_version     = each.value.elasticsearch_version
+  prevent_destroy           = each.value.prevent_destroy
   cluster_config            = each.value.cluster_config
   ebs_options               = each.value.ebs_options
   environment               = var.environment

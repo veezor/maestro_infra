@@ -17,4 +17,8 @@ resource "aws_elasticsearch_domain" "elasticsearch" {
     Environment = var.environment
     Project = var.project
   }
+
+  lifecycle {
+    prevent_destroy = var.prevent_destroy
+  }
 }

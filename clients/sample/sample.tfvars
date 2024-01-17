@@ -33,6 +33,7 @@ projects        = [
             {
                 name = "frontend-site"
                 elasticsearch_version = "7.10"
+                prevent_destroy = bool 
                 cluster_config = {
                     instance_type = "t3.small.elasticsearch"
                     instance_count = 1
