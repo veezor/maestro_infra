@@ -72,7 +72,7 @@ resource "aws_iam_policy" "ecr" {
 
 data "aws_iam_policy_document" "elb" {
   statement {
-    actions   = ["elasticloadbalancing:CreateListener", "elasticloadbalancing:CreateLoadBalancer", "elasticloadbalancing:CreateTargetGroup", "elasticloadbalancing:DescribeListeners", "elasticloadbalancing:DescribeLoadBalancers", "elasticloadbalancing:DescribeTargetGroups", "elasticloadbalancing:AddTags"]
+    actions   = ["elasticloadbalancing:CreateListener", "elasticloadbalancing:CreateLoadBalancer", "elasticloadbalancing:CreateTargetGroup", "elasticloadbalancing:DescribeListeners", "elasticloadbalancing:DescribeLoadBalancers", "elasticloadbalancing:DescribeTargetGroups", "elasticloadbalancing:AddTags", "elasticloadbalancing:CreateRule"]
     resources = ["*"]
     effect    = "Allow"
   }

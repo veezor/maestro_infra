@@ -12,4 +12,3 @@ variable "master_username" {}
 variable "skip_final_snapshot" {}
 variable "instance_class" {}
 variable "apply_immediately" {}
-variable "prevent_destroy" {}

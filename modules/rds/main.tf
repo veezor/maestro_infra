@@ -43,7 +43,7 @@ resource "aws_rds_cluster" "cluster" {
   final_snapshot_identifier = format("%s-%s-%s-cluster-%s", "${var.owner}", "${var.project}", "${var.environment}", "${local.snapshot_date}")
 
   lifecycle {
-    prevent_destroy = var.prevent_destroy
+    prevent_destroy = true
   }
 }
 

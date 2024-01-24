@@ -13,7 +13,6 @@ variable projects {
       master_password = string
       skip_final_snapshot = bool
       apply_immediately = bool
-      prevent_destroy = bool
     }))
   }))
 }
