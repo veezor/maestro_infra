@@ -41,10 +41,6 @@ resource "aws_rds_cluster" "cluster" {
   master_password           = var.master_password
   skip_final_snapshot       = var.skip_final_snapshot
   final_snapshot_identifier = format("%s-%s-%s-cluster-%s", "${var.owner}", "${var.project}", "${var.environment}", "${local.snapshot_date}")
-
-  lifecycle {
-    prevent_destroy = var.prevent_destroy
-  }
 }
 
 output "db-password" {

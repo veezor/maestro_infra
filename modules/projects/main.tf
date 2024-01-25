@@ -142,7 +142,7 @@ EOF
     }
     environment_variable {
       name  = "ECS_SERVICE_TASK_PROCESSES"
-      value = "web{1024;2048}:1-2"
+      value = "web{1024;2048}:1-2[mem=55;cpu=60;alb=60];web1{1024;2048}:1-2[mem=55;cpu=60;alb=60]"
     }
     environment_variable {
       name  = "ECS_TASK_ROLE_ARN"
@@ -215,6 +215,36 @@ resource "aws_ecr_repository" "ecr_repository" {
   name = format("%s-%s-%s", "${var.owner}", "${var.project_name}", "${var.environment}")
 }
 
+resource "aws_ecs_cluster" "ecs_cluster" {
+  name = format("%s-%s-%s", "${var.owner}", "${var.project_name}", "${var.environment}")
+}
+
+resource "aws_ecs_cluster_capacity_providers" "ecs_fargate" {
+  cluster_name = aws_ecs_cluster.ecs_cluster.name
+  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
+  default_capacity_provider_strategy {
+    base              = 1
+    weight            = 100
+    capacity_provider = "FARGATE_SPOT"
+  }
+}
+
+module "ecs_service" {
+  source = "../../modules/ecs_service"
+  for_each = {for service in var.services: service.identifier => service}
+
+  identifier          = each.value.identifier
+  cluster_id          = aws_ecs_cluster.ecs_cluster.id
+  execution_role_arn  = module.role.ecs_role_arn
+  private_subnet_ids  = var.aws_private_subnets
+  app_security_group_id = aws_security_group.app.id
+
+  # Common
+  project     = var.project_name
+  owner       = var.owner
+  aws_vpc_id  = var.aws_vpc_id
+  environment = var.environment
+}
 
 module "rds" {
   source                    = "../../modules/rds"

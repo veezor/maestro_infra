@@ -1,0 +1,9 @@
+variable "identifier" {}
+variable "project" {}
+variable "owner" {}
+variable "aws_vpc_id" {}
+variable "environment" {}
+variable "cluster_id" {}
+variable "execution_role_arn" {}
+variable "private_subnet_ids" {}
+variable "app_security_group_id" {}

@@ -3,6 +3,7 @@ variable project_name {}
 variable code_provider {}
 variable repository_url {}
 variable repository_branch {}
+variable services {}
 variable databases {}
 
 # Common
