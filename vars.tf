@@ -4,6 +4,9 @@ variable projects {
     code_provider = string
     repository_url = string
     repository_branch = string
+    services = list(object({
+      identifier = string
+    }))
     databases = list(object({
       identifier = string
       engine = string

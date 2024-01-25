@@ -35,6 +35,7 @@ module "projects" {
   code_provider       = each.value.code_provider
   repository_url      = each.value.repository_url
   repository_branch   = each.value.repository_branch
+  services            = each.value.services
   databases           = each.value.databases
   
   # Common

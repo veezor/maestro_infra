@@ -8,24 +8,30 @@ projects        = [
         project_name        = "backend"
         code_provider       = "GITHUB"
         repository_url      = "https://github.com/owner/backend"
-        repository_branch   = "staging",
+        repository_branch   = "staging"
+                services            = [
+            {
+                identifier: "web"
+            }
+        ]
         databases           = [
-            //{
-            //    identifier          = "backend",
-            //    engine              =  "aurora-mysql",
-            //    engine_version      = "5.7"
-            //    instance_class      = "db.t3.medium"
-            //    master_username     = ""
-            //    master_password     = ""
-            //    skip_final_snapshot = false
-            //    apply_immediately   = true
-            //}
+            {
+                identifier          = "backend"
+                engine              =  "aurora-mysql"
+                engine_version      = "5.7"
+                instance_class      = "db.t3.medium"
+                master_username     = ""
+                master_password     = ""
+                skip_final_snapshot = false
+                apply_immediately   = true
+                prevent_destroy   = true
+            }
         ]
     },
     {
         project_name        = "frontend"
         code_provider       = "BITBUCKET"
         repository_url      = "https://bitbucket.org/owner/frontend"
-        repository_branch   = "staging",
+        repository_branch   = "staging"
         databases           = []
     }]
