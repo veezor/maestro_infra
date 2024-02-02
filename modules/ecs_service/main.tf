@@ -10,11 +10,25 @@ resource "aws_ecs_task_definition" "ecs_taskdefinition" {
 
   container_definitions = jsonencode([{
     name  = format("%s-%s", "${var.owner}", "${var.project}")
-    image = "sua-imagem-do-container"
+    image = "494558059907.dkr.ecr.us-east-1.amazonaws.com/fagianijunior-static-site-production:145820fe"
+    cpu = 256
+    memory = 512
     portMappings = [{
       containerPort = 3000,
       hostPort      = 3000,
-    }]
+      protocol      = "tcp"
+    }],
+    essential = true
+    entryPoint = ["web"]
+    logConfiguration = {
+      "logDriver" = "awslogs",
+      "options"   = {
+        "awslogs-group" = format("/ecs/%s-%s-%s-%s", "${var.owner}", "${var.project}", "${var.environment}", "${var.identifier}"),
+        "awslogs-region" = "us-east-1",
+        "awslogs-stream-prefix" = "ecs"
+      }
+    }
+
   }])
 }
 
