@@ -4,6 +4,7 @@ variable code_provider {}
 variable repository_url {}
 variable repository_branch {}
 variable databases {}
+variable elasticsearch {}
 
 # Common
 variable owner {}

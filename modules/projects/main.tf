@@ -235,3 +235,17 @@ module "rds" {
   skip_final_snapshot   = each.value.skip_final_snapshot
   apply_immediately     = each.value.apply_immediately
 }
+
+module "elasticsearch" {
+  source                    = "../../modules/elasticsearch"
+  for_each = {for domain in var.elasticsearch: domain.name => domain}
+
+  name                      = each.value.name
+  elasticsearch_version     = each.value.elasticsearch_version
+  prevent_destroy           = each.value.prevent_destroy
+  cluster_config            = each.value.cluster_config
+  ebs_options               = each.value.ebs_options
+  environment               = var.environment
+  project                   = var.project_name
+  owner                     = var.owner
+}

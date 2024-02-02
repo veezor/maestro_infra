@@ -14,6 +14,19 @@ variable projects {
       skip_final_snapshot = bool
       apply_immediately = bool
     }))
+    elasticsearch = list(object({
+      name = string
+      elasticsearch_version = string
+      prevent_destroy = bool 
+      cluster_config = object({
+        instance_count = number 
+        instance_type = string
+      })
+      ebs_options = object({
+        ebs_enabled = bool 
+        volume_size = number 
+      })
+    }))
   }))
 }
 
