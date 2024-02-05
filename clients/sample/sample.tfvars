@@ -53,4 +53,6 @@ projects        = [
                 prevent_destroy     = true
             }
         ]
-}]}
+        }]
+    }
+]

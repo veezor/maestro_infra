@@ -11,4 +11,3 @@ variable "subnet_ids" {}
 variable "sg_ids" {}
 variable "aws_vpc_id" {}
 variable "apply_immediately" {}
-variable "prevent_destroy" {}
