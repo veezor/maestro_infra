@@ -40,6 +40,7 @@ module "projects" {
   databases           = each.value.databases
   elasticsearch       = each.value.elasticsearch
   redis               = each.value.redis
+  s3                  = each.value.s3
   
   # Common
   owner               = var.owner

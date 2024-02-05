@@ -29,6 +29,7 @@ projects = [
             }
         ]
         redis               = []
+        s3                  = []
         elasticsearch       = []
     },
     {
@@ -64,5 +65,6 @@ projects = [
                 prevent_destroy     = true
             }
         ]
+        s3                  = []
     }
 ]

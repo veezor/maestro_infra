@@ -7,6 +7,7 @@ variable repository_branch {}
 variable databases {}
 variable elasticsearch {}
 variable redis {}
+variable s3 {}
 
 # Common
 variable owner {}
