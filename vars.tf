@@ -34,9 +34,10 @@ variable projects {
       parameter_group = string 
       apply_immediately = bool
       prevent_destroy = bool
+    s3 = list(object({
+      name = string
     }))
-  }))
-  }))
+  }))}))}))
 }
 
 variable "owner" {

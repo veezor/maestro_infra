@@ -276,6 +276,7 @@ module "elasticsearch" {
   project                   = var.project_name
   owner                     = var.owner
 }
+
 module "redis" {
   source                    = "../../modules/redis"
   for_each = {for cluster in var.redis: cluster.identifier => cluster}
@@ -293,4 +294,14 @@ module "redis" {
   subnet_ids            = var.aws_private_subnets
   sg_ids                = [aws_security_group.app.id, aws_security_group.codebuild.id]
   apply_immediately     = each.value.apply_immediately
+}
+
+module "s3" {
+  source                    = "../../modules/s3"
+  for_each = {for bucket in var.s3: bucket.name => bucket}
+
+  name                      = each.value.name
+  environment               = var.environment
+  project                   = var.project_name
+  owner                     = var.owner
 }
