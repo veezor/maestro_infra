@@ -17,7 +17,10 @@ AWS services that you can create:
 - **ECR**
 - **SecretsManager**
 - **RDS**
+<<<<<<< HEAD
 - **Elasticsearch** (Opensearch)
+=======
+>>>>>>> a141f6d5f702ddc197502ccaae2e21f65fa1ead7
 - **S3**
 
 ## Steps to init a new project 

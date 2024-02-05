@@ -23,6 +23,7 @@ projects        = [
         ]
         s3                  = [
             {
+<<<<<<< HEAD
                 name  = "backend-buck3t"
             },
             {
@@ -30,6 +31,16 @@ projects        = [
             }
         ]
         elasticsearch       = []
+=======
+                name  = "trasfinal"
+                prevent_destroy  = true
+            },
+            {
+                name  = "middleend"
+                prevent_destroy  = true
+            }
+        ]
+>>>>>>> a141f6d5f702ddc197502ccaae2e21f65fa1ead7
     },
     {
         project_name        = "frontend"
@@ -37,6 +48,7 @@ projects        = [
         repository_url      = "https://bitbucket.org/owner/frontend"
         repository_branch   = "staging"
         databases           = []
+<<<<<<< HEAD
         elasticsearch       = [
             {
                 name = "frontend-site"
@@ -51,5 +63,7 @@ projects        = [
                 }
             }
         ]
+=======
+>>>>>>> a141f6d5f702ddc197502ccaae2e21f65fa1ead7
         s3                  = []
     }]
