@@ -37,6 +37,7 @@ module "projects" {
   repository_branch   = each.value.repository_branch
   databases           = each.value.databases
   elasticsearch       = each.value.elasticsearch
+  s3                  = each.value.s3
   
   # Common
   owner               = var.owner

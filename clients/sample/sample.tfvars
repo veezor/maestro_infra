@@ -21,6 +21,14 @@ projects        = [
             //    apply_immediately   = true
             //}
         ]
+        s3                  = [
+            {
+                name  = "backend-buck3t"
+            },
+            {
+                name  = "middleend"
+            }
+        ]
         elasticsearch       = []
     },
     {
@@ -43,4 +51,5 @@ projects        = [
                 }
             }
         ]
+        s3                  = []
     }]

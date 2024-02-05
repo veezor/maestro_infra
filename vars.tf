@@ -25,7 +25,10 @@ variable projects {
         ebs_enabled = bool 
         volume_size = number 
       })
+    s3 = list(object({
+      name = string
     }))
+  }))
   }))
 }
 
