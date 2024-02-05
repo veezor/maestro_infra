@@ -17,7 +17,6 @@ variable projects {
     elasticsearch = list(object({
       name = string
       elasticsearch_version = string
-      prevent_destroy = bool 
       cluster_config = object({
         instance_count = number 
         instance_type = string
