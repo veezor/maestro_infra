@@ -28,6 +28,9 @@ variable projects {
         volume_size = number 
       })
     }))
+    s3 = list(object({
+      name = string
+    }))
     redis = list(object({
       identifier = string
       engine = string

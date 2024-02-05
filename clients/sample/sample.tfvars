@@ -39,6 +39,14 @@ projects = [
                 prevent_destroy  = true
             }
         ]
+        s3                  = [
+            {
+                name  = "backend-buck3t"
+            },
+            {
+                name  = "middleend"
+            }
+        ]
         elasticsearch       = []
     },
     {
