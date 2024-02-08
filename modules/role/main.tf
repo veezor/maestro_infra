@@ -27,7 +27,7 @@ resource "aws_iam_policy" "cloudwatch-ssm" {
 
 data "aws_iam_policy_document" "ecs" {
   statement {
-    actions   = ["ecs:CreateService", "ecs:CreateCluster", "ecs:DescribeServices", "ecs:DescribeClusters", "ecs:ListServices", "ecs:RegisterTaskDefinition", "ecs:UpdateService"]
+    actions   = ["ecs:CreateService", "ecs:CreateCluster", "ecs:DescribeServices", "ecs:DescribeClusters", "ecs:ListServices", "ecs:RegisterTaskDefinition", "ecs:UpdateService", "ecs:TagResource"]
     resources = ["*"]
     effect    = "Allow"
   }
