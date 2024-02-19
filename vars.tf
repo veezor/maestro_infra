@@ -50,3 +50,7 @@ variable "vpc_cidr_block" {
 variable "maestro_image" {
   type = string
 }
+
+variable "vpc_id" {
+  type = string
+}

@@ -1,7 +1,8 @@
 owner           = "owner-name"
 region          = "us-east-1"
 environment     = "staging"
-vpc_cidr_block  = "10.4.0.0/16"
+vpc_cidr_block  = "10.6.0.0/16"
+vpc_id          = "vpc-039f602c7f79c31d8"
 maestro_image   = "public.ecr.aws/h4u2q3r3/maestro:1.4.0"
 projects        = [
     {
@@ -30,17 +31,17 @@ projects        = [
         repository_branch   = "staging",
         databases           = []
         elasticsearch       = [
-            {
-                name = "frontend-site"
-                elasticsearch_version = "7.10"
-                cluster_config = {
-                    instance_type = "t3.small.elasticsearch"
-                    instance_count = 1
-                }
-                ebs_options = {
-                    ebs_enabled = true
-                    volume_size = 40
-                }
-            }
+            //{
+            //    name = "frontend-site"
+            //    elasticsearch_version = "7.10"
+            //    cluster_config = {
+            //        instance_type = "t3.small.elasticsearch"
+            //        instance_count = 1
+            //    }
+            //    ebs_options = {
+            //        ebs_enabled = true
+            //        volume_size = 40
+            //    }
+            //}
         ]
     }]

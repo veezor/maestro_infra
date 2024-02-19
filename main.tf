@@ -16,6 +16,16 @@ locals {
   subnet_cidrs = cidrsubnets(var.vpc_cidr_block, 8, 8, 8, 8, 8, 8)
 }
 
+module "creator" {
+  source = "./modules/creator"
+
+  # Common
+  owner              = var.owner
+  environment        = var.environment
+  vpc_cidr_block     = var.vpc_cidr_block
+  vpc_id             = var.vpc_id
+}
+
 module "vpc" {
   source = "./modules/vpc"
 
@@ -24,6 +34,7 @@ module "vpc" {
   environment        = var.environment
   vpc_cidr_block     = var.vpc_cidr_block
   subnets_cidr_block = local.subnet_cidrs
+  vpc_id             = module.creator.aws_vpc_id
 }
  
 module "projects" {
@@ -44,7 +55,7 @@ module "projects" {
   maestro_image       = var.maestro_image
   aws_public_subnets  = module.vpc.aws_public_subnets
   aws_private_subnets = module.vpc.aws_private_subnets
-  aws_vpc_id          = module.vpc.aws_vpc_id
+  aws_vpc_id          = module.creator.aws_vpc_id
   vpc_cidr_block      = var.vpc_cidr_block
   region              = var.region
 }
