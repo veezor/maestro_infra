@@ -69,3 +69,7 @@ variable "peering" {
     public_route_tables_id = list(string)
 })
 }
+
+variable "vpc_id" {
+  type = string
+}

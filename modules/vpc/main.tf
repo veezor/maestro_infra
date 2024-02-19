@@ -1,16 +1,6 @@
-resource "aws_vpc" "vpc" {
-  cidr_block           = var.vpc_cidr_block
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-
-
-  tags = {
-    "Name"        = format("%s-%s", "${var.owner}", "${var.environment}")
-    "Owner"       = "${var.owner}"
-    "Environment" = "${var.environment}"
-  }
+data "aws_vpc" "vpc" {
+  id = var.vpc_id
 }
-
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -31,7 +21,7 @@ resource "aws_subnet" "public_subnets" {
 
 resource "aws_subnet" "private_subnets" {
   for_each          = { for idx in range(3) : idx => true }
-  vpc_id            = aws_vpc.vpc.id
+  vpc_id            = data.aws_vpc.vpc.id
   cidr_block        = var.subnets_cidr_block[each.key + 3]
   availability_zone = data.aws_availability_zones.available.names[each.key]
   tags = {
@@ -43,7 +33,7 @@ resource "aws_subnet" "private_subnets" {
 }
 
 resource "aws_internet_gateway" "ig" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = data.aws_vpc.vpc.id
 
   tags = {
     "Owner"       = "${var.owner}"
@@ -73,7 +63,7 @@ resource "aws_nat_gateway" "ng" {
 }
 
 resource "aws_route_table" "public_rt_1" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = data.aws_vpc.vpc.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -93,7 +83,7 @@ resource "aws_route_table" "public_rt_1" {
 }
 
 resource "aws_route_table" "public_rt_2" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = data.aws_vpc.vpc.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -113,7 +103,7 @@ resource "aws_route_table" "public_rt_2" {
 }
 
 resource "aws_route_table" "public_rt_3" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = data.aws_vpc.vpc.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -133,7 +123,7 @@ resource "aws_route_table" "public_rt_3" {
 }
 
 resource "aws_route_table" "private_rt_1" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = data.aws_vpc.vpc.id
 
   route {
     cidr_block     = "0.0.0.0/0"
@@ -153,7 +143,7 @@ resource "aws_route_table" "private_rt_1" {
 }
 
 resource "aws_route_table" "private_rt_2" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = data.aws_vpc.vpc.id
 
   route {
     cidr_block     = "0.0.0.0/0"
@@ -173,7 +163,7 @@ resource "aws_route_table" "private_rt_2" {
 }
 
 resource "aws_route_table" "private_rt_3" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = data.aws_vpc.vpc.id
 
   route {
     cidr_block     = "0.0.0.0/0"
