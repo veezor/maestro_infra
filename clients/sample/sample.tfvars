@@ -21,7 +21,7 @@ projects        = [
             //    apply_immediately   = true
             //}
         ]
-        elasticsearch       = []
+        redis               = []
     },
     {
         project_name        = "frontend"
@@ -41,6 +41,18 @@ projects        = [
                     ebs_enabled = true
                     volume_size = 40
                 }
+        redis               = [
+            {
+                identifier          = "frontend-cluster"
+                engine              = "redis"
+                engine_version      = "7.0"
+                node_type           = "cache.t4g.micro"
+                num_cache_nodes     = 1
+                parameter_group     = "default.redis7"
+                apply_immediately   = true
+                prevent_destroy     = true
             }
         ]
-    }]
+        }]
+    }
+]
