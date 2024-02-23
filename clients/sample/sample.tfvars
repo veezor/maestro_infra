@@ -31,17 +31,17 @@ projects        = [
         repository_branch   = "staging"
         databases           = []
         elasticsearch       = [
-            {
-                name = "frontend-site"
-                elasticsearch_version = "7.10"
-                cluster_config = {
-                    instance_type = "t3.small.elasticsearch"
-                    instance_count = 1
-                }
-                ebs_options = {
-                    ebs_enabled = true
-                    volume_size = 40
-                }
+             {
+              name = "frontend-site"
+              elasticsearch_version = "7.10"
+              cluster_config = {
+                  instance_type = "t3.small.elasticsearch"
+                  instance_count = 1
+              }
+              ebs_options = {
+                  ebs_enabled = true
+                  volume_size = 40
+              }
             }
         ]
         redis               = [
