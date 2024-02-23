@@ -197,6 +197,34 @@ EOF
   }
 }
 
+resource "aws_codebuild_webhook" "webhook" {
+  project_name = aws_codebuild_project.cb.name
+  build_type   = "BUILD"
+
+  filter_group {
+    filter {
+      type    = "EVENT"
+      pattern = "PUSH"
+    }
+
+    filter {
+      type    = "HEAD_REF"
+      pattern = "^refs/heads/${var.repository_branch}$"
+    }
+  }
+  filter_group {
+    filter {
+      type    = "EVENT"
+      pattern = "PULL_REQUEST_MERGED"
+    }
+
+    filter {
+      type    = "HEAD_REF"
+      pattern = "^refs/heads/${var.repository_branch}$"
+    }
+  }
+}
+
 resource "aws_secretsmanager_secret" "secret" {
   name = format("%s/%s-%s", "${var.environment}", "${var.owner}", "${var.project_name}")
 }
