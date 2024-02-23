@@ -19,6 +19,6 @@ resource "aws_elasticsearch_domain" "elasticsearch" {
   }
 
   lifecycle {
-    prevent_destroy = var.prevent_destroy
+    prevent_destroy = false
   }
 }

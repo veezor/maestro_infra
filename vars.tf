@@ -17,7 +17,6 @@ variable projects {
     elasticsearch = list(object({
       name = string
       elasticsearch_version = string
-      prevent_destroy = bool 
       cluster_config = object({
         instance_count = number 
         instance_type = string
@@ -26,7 +25,17 @@ variable projects {
         ebs_enabled = bool 
         volume_size = number 
       })
+    redis = list(object({
+      identifier = string
+      engine = string
+      engine_version = string
+      node_type = string
+      num_cache_nodes = number
+      parameter_group = string 
+      apply_immediately = bool
+      prevent_destroy = bool
     }))
+  }))
   }))
 }
 

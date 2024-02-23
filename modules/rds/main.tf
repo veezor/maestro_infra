@@ -23,7 +23,7 @@ resource "aws_db_subnet_group" "sg" {
 
 resource "aws_rds_cluster_instance" "instances" {
   count              = 1
-  identifier         = format("%s-%s-%s-instance%s", "${var.owner}", "${var.project}", "${var.environment}", "${count.index}")
+  identifier         = format("%s-%s", "${var.identifier}", "${count.index}")
   cluster_identifier = aws_rds_cluster.cluster.id
   instance_class     = var.instance_class
   engine             = aws_rds_cluster.cluster.engine
@@ -32,7 +32,7 @@ resource "aws_rds_cluster_instance" "instances" {
 }
 
 resource "aws_rds_cluster" "cluster" {
-  cluster_identifier        = format("%s-%s-%s-cluster", "${var.owner}", "${var.project}", "${var.environment}")
+  cluster_identifier        = var.identifier
   engine                    = var.engine
   engine_version            = var.engine_version
   database_name             = var.project
@@ -41,7 +41,7 @@ resource "aws_rds_cluster" "cluster" {
   master_password           = var.master_password
   skip_final_snapshot       = var.skip_final_snapshot
   final_snapshot_identifier = format("%s-%s-%s-cluster-%s", "${var.owner}", "${var.project}", "${var.environment}", "${local.snapshot_date}")
-
+  vpc_security_group_ids    = [aws_security_group.db.id]
   lifecycle {
     prevent_destroy = true
   }

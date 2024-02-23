@@ -5,6 +5,7 @@ variable repository_url {}
 variable repository_branch {}
 variable databases {}
 variable elasticsearch {}
+variable redis {}
 
 # Common
 variable owner {}

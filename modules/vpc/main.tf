@@ -20,6 +20,8 @@ resource "aws_subnet" "public_subnets" {
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = var.subnets_cidr_block[each.key]
   availability_zone = data.aws_availability_zones.available.names[each.key]
+  map_public_ip_on_launch = true
+
   tags = {
     "Name"        = format("%s-%s-public%s", "${var.owner}", "${var.environment}", each.key)
     "Owner"       = "${var.owner}"
