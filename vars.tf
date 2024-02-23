@@ -13,6 +13,7 @@ variable projects {
       master_password = string
       skip_final_snapshot = bool
       apply_immediately = bool
+      snapshot_identifier = string
     }))
     elasticsearch = list(object({
       name = string
