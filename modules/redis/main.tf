@@ -41,6 +41,6 @@ resource "aws_elasticache_cluster" "redis" {
   apply_immediately    = var.apply_immediately
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
