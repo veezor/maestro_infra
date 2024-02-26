@@ -3,7 +3,7 @@ locals {
 }
 
 resource "aws_security_group" "db" {
-  name   = format("%s-%s-%s-db", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-db", "${var.identifier}", "${var.environment}")
   vpc_id = var.aws_vpc_id
 }
 
@@ -17,7 +17,7 @@ resource "aws_security_group_rule" "db_inbound" {
 }
 
 resource "aws_db_subnet_group" "sg" {
-  name       = format("%s-%s-%s-subnet-group", "${var.owner}", "${var.project}", "${var.environment}")
+  name       = format("%s-%s-subnet-group", "${var.identifier}", "${var.environment}")
   subnet_ids = var.private_subnet_ids
 }
 
@@ -32,7 +32,7 @@ resource "aws_rds_cluster_instance" "instances" {
 }
 
 resource "aws_rds_cluster" "cluster" {
-  cluster_identifier        = var.identifier
+  cluster_identifier        = format("%s-%s-cluster", "${var.identifier}", "${var.environment}")
   engine                    = var.engine
   engine_version            = var.engine_version
   database_name             = var.project
@@ -40,7 +40,7 @@ resource "aws_rds_cluster" "cluster" {
   master_username           = var.master_username
   master_password           = var.master_password
   skip_final_snapshot       = var.skip_final_snapshot
-  final_snapshot_identifier = format("%s-%s-%s-cluster-%s", "${var.owner}", "${var.project}", "${var.environment}", "${local.snapshot_date}")
+  final_snapshot_identifier = format("%s-%s-cluster-%s", "${var.identifier}", "${var.environment}", "${local.snapshot_date}")
   vpc_security_group_ids    = [aws_security_group.db.id]
   lifecycle {
     prevent_destroy = true
