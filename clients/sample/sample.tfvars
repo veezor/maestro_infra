@@ -21,16 +21,6 @@ projects        = [
                 apply_immediately   = true
             }
         ]
-        s3                  = [
-            {
-                name  = "trasfinal"
-                prevent_destroy  = true
-            },
-            {
-                name  = "middleend"
-                prevent_destroy  = true
-            }
-        ]
         redis               = []
         s3                  = []
         elasticsearch       = []
