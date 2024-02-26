@@ -1,5 +1,5 @@
 resource "aws_security_group" "redis" {
-  name   = format("%s-%s-%s-redis", "${var.owner}", "${var.project}", "${var.environment}")
+  name   = format("%s-%s-redis", "${var.identifier}", "${var.environment}")
   vpc_id = var.aws_vpc_id
 }
 
@@ -29,7 +29,7 @@ resource "aws_elasticache_subnet_group" "redis" {
 }
 
 resource "aws_elasticache_cluster" "redis" {
-  cluster_id           = var.identifier
+  cluster_id           = format("%s-%s-cluster", "${var.identifier}", "${var.environment}")
   engine               = var.engine
   node_type            = var.node_type
   num_cache_nodes      = var.num_cache_nodes
