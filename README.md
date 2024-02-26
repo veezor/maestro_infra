@@ -19,6 +19,7 @@ AWS services that you can create:
 - **RDS**
 - **Elasticsearch** (Opensearch)
 - **Redis** (Elasticache)
+- **S3**
 
 ## Steps to init a new project 
 
