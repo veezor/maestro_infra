@@ -2,6 +2,7 @@ variable projects {
   type = list(object({
     project_name = string
     code_provider = string
+    task_processes = string
     repository_url = string
     repository_branch = string
     databases = list(object({

@@ -33,6 +33,7 @@ module "projects" {
   # Project
   project_name        = each.value.project_name
   code_provider       = each.value.code_provider
+  task_processes      = each.value.task_processes
   repository_url      = each.value.repository_url
   repository_branch   = each.value.repository_branch
   databases           = each.value.databases

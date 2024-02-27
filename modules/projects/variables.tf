@@ -1,6 +1,7 @@
 # Project
 variable project_name {}
 variable code_provider {}
+variable task_processes {}
 variable repository_url {}
 variable repository_branch {}
 variable databases {}

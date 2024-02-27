@@ -142,7 +142,7 @@ EOF
     }
     environment_variable {
       name  = "ECS_SERVICE_TASK_PROCESSES"
-      value = "web{1024;2048}:1-2"
+      value = var.task_processes
     }
     environment_variable {
       name  = "ECS_TASK_ROLE_ARN"

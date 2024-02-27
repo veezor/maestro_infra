@@ -7,6 +7,7 @@ projects        = [
     {
         project_name        = "backend"
         code_provider       = "GITHUB"
+        task_processes      = "web{1024;2048}:1-2"
         repository_url      = "https://github.com/owner/backend"
         repository_branch   = "staging",
         databases           = [
@@ -26,6 +27,7 @@ projects        = [
     {
         project_name        = "frontend"
         code_provider       = "BITBUCKET"
+        task_processes      = "web{1024;2048}:1-2"
         repository_url      = "https://bitbucket.org/owner/frontend"
         repository_branch   = "staging",
         databases           = []

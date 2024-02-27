@@ -43,7 +43,7 @@ resource "aws_rds_cluster" "cluster" {
   final_snapshot_identifier = format("%s-%s-cluster-%s", "${var.identifier}", "${var.environment}", "${local.snapshot_date}")
   vpc_security_group_ids    = [aws_security_group.db.id]
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
