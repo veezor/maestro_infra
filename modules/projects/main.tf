@@ -248,20 +248,21 @@ module "rds" {
   source                    = "../../modules/rds"
   for_each = {for database in var.databases: database.identifier => database}
 
-  identifier            = each.value.identifier
-  instance_class        = each.value.instance_class
-  engine                = each.value.engine
-  engine_version        = each.value.engine_version
-  project               = var.project_name
-  owner                 = var.owner
-  aws_vpc_id            = var.aws_vpc_id
-  environment           = var.environment
-  app_security_group_id = aws_security_group.app.id
-  private_subnet_ids    = var.aws_private_subnets
-  master_username       = each.value.master_username
-  master_password       = each.value.master_password
-  skip_final_snapshot   = each.value.skip_final_snapshot
-  apply_immediately     = each.value.apply_immediately
+  identifier                = each.value.identifier
+  instance_class            = each.value.instance_class
+  engine                    = each.value.engine
+  engine_version            = each.value.engine_version
+  project                   = var.project_name
+  owner                     = var.owner
+  aws_vpc_id                = var.aws_vpc_id
+  environment               = var.environment
+  app_security_group_id     = aws_security_group.app.id
+  private_subnet_ids        = var.aws_private_subnets
+  master_username           = each.value.master_username
+  master_password           = each.value.master_password
+  skip_final_snapshot       = each.value.skip_final_snapshot
+  apply_immediately         = each.value.apply_immediately
+  snapshot_identifier       = each.value.snapshot_identifier
 }
 
 module "elasticsearch" {

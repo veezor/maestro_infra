@@ -22,13 +22,13 @@ resource "aws_db_subnet_group" "sg" {
 }
 
 resource "aws_rds_cluster_instance" "instances" {
-  count              = 1
-  identifier         = format("%s-%s", "${var.identifier}", "${count.index}")
-  cluster_identifier = aws_rds_cluster.cluster.id
-  instance_class     = var.instance_class
-  engine             = aws_rds_cluster.cluster.engine
-  engine_version     = aws_rds_cluster.cluster.engine_version
-  apply_immediately  = var.apply_immediately
+  count               = 1
+  identifier          = format("%s-%s-%s-%s-instance%s", "${var.owner}", "${var.project}", "${var.identifier}", "${var.environment}", "${count.index}")
+  cluster_identifier  = aws_rds_cluster.cluster.id
+  instance_class      = var.instance_class
+  engine              = aws_rds_cluster.cluster.engine
+  engine_version      = aws_rds_cluster.cluster.engine_version
+  apply_immediately   = var.apply_immediately
 }
 
 resource "aws_rds_cluster" "cluster" {
@@ -42,6 +42,7 @@ resource "aws_rds_cluster" "cluster" {
   skip_final_snapshot       = var.skip_final_snapshot
   final_snapshot_identifier = format("%s-%s-cluster-%s", "${var.identifier}", "${var.environment}", "${local.snapshot_date}")
   vpc_security_group_ids    = [aws_security_group.db.id]
+  snapshot_identifier       = var.snapshot_identifier
   lifecycle {
     prevent_destroy = false
   }

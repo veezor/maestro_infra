@@ -11,16 +11,17 @@ projects        = [
         repository_url      = "https://github.com/owner/backend"
         repository_branch   = "staging",
         databases           = [
-            //{
-            //    identifier          = "backend",
-            //    engine              =  "aurora-mysql",
-            //    engine_version      = "5.7"
-            //    instance_class      = "db.t3.medium"
-            //    master_username     = ""
-            //    master_password     = ""
-            //    skip_final_snapshot = false
-            //    apply_immediately   = true
-            //}
+            {
+                identifier          = "backend"
+                engine              = "aurora-mysql"
+                engine_version      = "5.7"
+                instance_class      = "db.t4g.medium"
+                master_username     = "Us35n4m3"
+                master_password     = "P4ssw05d"
+                skip_final_snapshot = false
+                apply_immediately   = true
+                snapshot_identifier = ""
+            }
         ]
         redis               = []
     },
@@ -29,20 +30,22 @@ projects        = [
         code_provider       = "BITBUCKET"
         task_processes      = "web{1024;2048}:1-2"
         repository_url      = "https://bitbucket.org/owner/frontend"
-        repository_branch   = "staging",
+        repository_branch   = "staging"
         databases           = []
         elasticsearch       = [
-            {
-                name = "frontend-site"
-                elasticsearch_version = "7.10"
-                cluster_config = {
-                    instance_type = "t3.small.elasticsearch"
-                    instance_count = 1
-                }
-                ebs_options = {
-                    ebs_enabled = true
-                    volume_size = 40
-                }
+             {
+              name = "frontend-site"
+              elasticsearch_version = "7.10"
+              cluster_config = {
+                  instance_type = "t3.small.elasticsearch"
+                  instance_count = 1
+              }
+              ebs_options = {
+                  ebs_enabled = true
+                  volume_size = 40
+              }
+            }
+        ]
         redis               = [
             {
                 identifier          = "frontend-cluster"
@@ -55,6 +58,5 @@ projects        = [
                 prevent_destroy     = true
             }
         ]
-        }]
     }
 ]
