@@ -27,6 +27,7 @@ variable projects {
         ebs_enabled = bool 
         volume_size = number 
       })
+    }))
     redis = list(object({
       identifier = string
       engine = string
@@ -35,9 +36,7 @@ variable projects {
       num_cache_nodes = number
       parameter_group = string 
       apply_immediately = bool
-      prevent_destroy = bool
     }))
-  }))
   }))
 }
 
@@ -60,5 +59,9 @@ variable "vpc_cidr_block" {
 }
 
 variable "maestro_image" {
+  type = string
+}
+
+variable "peering_with_vpc_id" {
   type = string
 }

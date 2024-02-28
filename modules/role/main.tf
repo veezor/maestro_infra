@@ -1,7 +1,7 @@
 data "aws_caller_identity" "current" {}
 data "aws_iam_policy_document" "codebuild" {
   statement {
-    actions   = ["codebuild:StartBuild", "codebuild:StopBuild", "codebuild:CreateProject", "codebuild:DeleteProject", "codebuild:BatchGetBuilds", "codebuild:ListBuilds", "codebuild:GetBuild", "codebuild:DescribeProject", "codebuild:ListProjects"]
+    actions   = ["codebuild:StartBuild", "codebuild:StopBuild", "codebuild:CreateProject", "codebuild:DeleteProject", "codebuild:BatchGetBuilds", "codebuild:ListBuilds", "codebuild:GetBuild", "codebuild:DescribeProject", "codebuild:ListProjects", "events:PutRule", "events:PutTargets"]
     resources = ["*"]
     effect    = "Allow"
   }

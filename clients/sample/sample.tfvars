@@ -1,9 +1,10 @@
-owner           = "owner-name"
-region          = "us-east-1"
-environment     = "staging"
-vpc_cidr_block  = "10.4.0.0/16"
-maestro_image   = "public.ecr.aws/h4u2q3r3/maestro:1.4.0"
-projects        = [
+owner                   = "owner-name"
+region                  = "us-east-1"
+environment             = "staging"
+vpc_cidr_block          = "10.4.0.0/16"
+maestro_image           = "public.ecr.aws/h4u2q3r3/maestro:1.4.0"
+peering_with_vpc_id     = 'vpc-59342222'
+projects = [
     {
         project_name        = "backend"
         code_provider       = "GITHUB"

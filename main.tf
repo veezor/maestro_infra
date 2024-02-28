@@ -20,10 +20,11 @@ module "vpc" {
   source = "./modules/vpc"
 
   # Common
-  owner              = var.owner
-  environment        = var.environment
-  vpc_cidr_block     = var.vpc_cidr_block
-  subnets_cidr_block = local.subnet_cidrs
+  owner               = var.owner
+  environment         = var.environment
+  vpc_cidr_block      = var.vpc_cidr_block
+  peering_with_vpc_id = var.peering_with_vpc_id
+  subnets_cidr_block  = local.subnet_cidrs
 }
  
 module "projects" {
