@@ -237,31 +237,77 @@ output "aws_private_subnets" {
 }
 
 resource "aws_vpc_peering_connection" "peer_connection" {
-  count = var.peering_with_vpc_id != "" ? 1 : 0
-  peer_vpc_id  = var.peering_with_vpc_id # VPC2
+  count = var.peering.accepter_vpc_id != "" ? 1 : 0
+  peer_vpc_id  = var.peering.accepter_vpc_id # VPC2
   vpc_id       = aws_vpc.vpc.id # VPC1
   auto_accept  = true
+  accepter {
+    allow_remote_vpc_dns_resolution = true
+  }
+  requester {
+    allow_remote_vpc_dns_resolution = true
+  }
 }
-
 data "aws_vpc" "old_vpc" {
-  id = var.peering_with_vpc_id  # Substitua pelo ID da VPC2
+  id = var.peering.accepter_vpc_id  # Substitua pelo ID da VPC2
 }
-
-resource "aws_route" "route_to_vpc" {
-  count = var.peering_with_vpc_id != "" ? 1 : 0
-  route_table_id            = aws_vpc.vpc.main_route_table_id # Substitua pelo ID da tabela de rotas da VPC1
+resource "aws_route" "private_route1_to_vpc" {
+  route_table_id            = aws_route_table.private_rt_1.id # Substitua pelo ID da tabela de rotas da VPC1
   destination_cidr_block    = data.aws_vpc.old_vpc.cidr_block      # Substitua pelo CIDR da VPC2
   vpc_peering_connection_id = aws_vpc_peering_connection.peer_connection[0].id  # ID da conexão de peering
 }
 
+resource "aws_route" "private_route2_to_vpc" {
+  route_table_id            = aws_route_table.private_rt_2.id # Substitua pelo ID da tabela de rotas da VPC1
+  destination_cidr_block    = data.aws_vpc.old_vpc.cidr_block      # Substitua pelo CIDR da VPC2
+  vpc_peering_connection_id = aws_vpc_peering_connection.peer_connection[0].id  # ID da conexão de peering
+}
+
+resource "aws_route" "private_route3_to_vpc" {
+  route_table_id            = aws_route_table.private_rt_3.id # Substitua pelo ID da tabela de rotas da VPC1
+  destination_cidr_block    = data.aws_vpc.old_vpc.cidr_block      # Substitua pelo CIDR da VPC2
+  vpc_peering_connection_id = aws_vpc_peering_connection.peer_connection[0].id  # ID da conexão de peering
+}
+
+
+resource "aws_route" "public_route1_to_vpc" {
+  route_table_id            = aws_route_table.public_rt_1.id # Substitua pelo ID da tabela de rotas da VPC1
+  destination_cidr_block    = data.aws_vpc.old_vpc.cidr_block      # Substitua pelo CIDR da VPC2
+  vpc_peering_connection_id = aws_vpc_peering_connection.peer_connection[0].id  # ID da conexão de peering
+}
+
+resource "aws_route" "public_route2_to_vpc" {
+  route_table_id            = aws_route_table.public_rt_2.id # Substitua pelo ID da tabela de rotas da VPC1
+  destination_cidr_block    = data.aws_vpc.old_vpc.cidr_block      # Substitua pelo CIDR da VPC2
+  vpc_peering_connection_id = aws_vpc_peering_connection.peer_connection[0].id  # ID da conexão de peering
+}
+
+resource "aws_route" "public_route3_to_vpc" {
+  route_table_id            = aws_route_table.public_rt_3.id # Substitua pelo ID da tabela de rotas da VPC1
+  destination_cidr_block    = data.aws_vpc.old_vpc.cidr_block      # Substitua pelo CIDR da VPC2
+  vpc_peering_connection_id = aws_vpc_peering_connection.peer_connection[0].id  # ID da conexão de peering
+}
+
+
 # Configurando rotas na VPC 2
-resource "aws_route" "route_to_old_vpc" {
-  count = var.peering_with_vpc_id != "" ? 1 : 0
-  route_table_id         = data.aws_vpc.old_vpc.main_route_table_id  # Substitua pelo ID da tabela de rotas da VPC2
+resource "aws_route" "public_route_to_old_vpc" {
+  count = var.peering.accepter_vpc_id != "" ? length(var.peering.public_route_tables_id) : 0
+  route_table_id         = var.peering.public_route_tables_id[count.index]  # Substitua pelo ID da tabela de rotas da VPC2
+  destination_cidr_block = aws_vpc.vpc.cidr_block  # Substitua pelo CIDR da VPC1
+  vpc_peering_connection_id = aws_vpc_peering_connection.peer_connection[0].id  # ID da conexão de peering
+}
+
+resource "aws_route" "private_route_to_old_vpc" {
+  count = var.peering.accepter_vpc_id != "" ? length(var.peering.private_route_tables_id) : 0
+  route_table_id         = var.peering.private_route_tables_id[count.index]  # Substitua pelo ID da tabela de rotas da VPC2
   destination_cidr_block = aws_vpc.vpc.cidr_block  # Substitua pelo CIDR da VPC1
   vpc_peering_connection_id = aws_vpc_peering_connection.peer_connection[0].id  # ID da conexão de peering
 }
 
 output "aws_vpc_id" {
   value = aws_vpc.vpc.id
+}
+
+output "other_aws_vpc" {
+  value = data.aws_vpc.old_vpc
 }
