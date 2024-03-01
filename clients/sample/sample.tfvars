@@ -30,7 +30,7 @@ projects = [
         ]
         redis               = []
         elasticsearch       = []
-    }
+    },
     {
         project_name        = "frontend"
         code_provider       = "BITBUCKET"
