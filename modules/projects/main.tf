@@ -243,6 +243,15 @@ resource "aws_ecr_repository" "ecr_repository" {
   name = format("%s-%s-%s", "${var.owner}", "${var.project_name}", "${var.environment}")
 }
 
+resource "aws_ecs_cluster" "ecs_cluster" {
+  name = format("%s-%s-%s-cluster", "${var.owner}", "${var.project_name}", "${var.environment}")
+
+  setting {
+    name  = "containerInsights"
+    value = "disabled"
+  }
+}
+
 
 module "rds" {
   source                    = "../../modules/rds"

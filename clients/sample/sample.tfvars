@@ -4,9 +4,9 @@ environment             = "staging"
 vpc_cidr_block          = "10.4.0.0/16"
 maestro_image           = "public.ecr.aws/h4u2q3r3/maestro:1.4.0"
 peering     = {
-    accepter_vpc_id = "vpc-0328c58230dd96100"
-    private_route_tables_id = ["rtb-0adde7d5ac2991522", "rtb-03feca6be7bf2d319", "rtb-0d5a9f504968b53a9", "rtb-04e8f767151cc13bb"]
-    public_route_tables_id = ["rtb-03aaf57fc3dd28bc6", "rtb-0d5bca2877d5c548f", "rtb-06ef39012e98c0a2c"]
+    accepter_vpc_id = ""
+    private_route_tables_id = []
+    public_route_tables_id = []
 }
 projects = [
     {
