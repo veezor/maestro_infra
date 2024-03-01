@@ -23,7 +23,7 @@ module "vpc" {
   owner               = var.owner
   environment         = var.environment
   vpc_cidr_block      = var.vpc_cidr_block
-  peering_with_vpc_id = var.peering_with_vpc_id
+  peering             = var.peering
   subnets_cidr_block  = local.subnet_cidrs
 }
  

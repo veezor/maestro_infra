@@ -62,6 +62,10 @@ variable "maestro_image" {
   type = string
 }
 
-variable "peering_with_vpc_id" {
-  type = string
+variable "peering" {
+  type = object({
+    accepter_vpc_id = string
+    private_route_tables_id = list(string)
+    public_route_tables_id = list(string)
+})
 }
