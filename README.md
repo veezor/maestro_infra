@@ -11,10 +11,11 @@ This branch allow you to create your AWS's infrastructure with Maestro_Infra usi
 ## Available modules
 AWS services that you can create:
 
-- **VPC** (VPCs, Subnets, Internet and Nat Gateways, Route Tables and Security Groups)
+- **VPC** (VPCs, Subnets, Internet and Nat Gateways, Peering connections, Route Tables and Security Groups)
 - **IAM** (Roles and Policies)
 - **Codebuild**
 - **ECR**
+- **ECS**
 - **SecretsManager**
 - **RDS**
 - **Elasticsearch** (Opensearch)
