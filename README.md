@@ -27,23 +27,36 @@ AWS services that you can create:
 This is an example for your environment variables file:
 
 ```bash
-owner = "owner"
-region = "us-east-1"
-environment = "staging"
-vpc_cidr_block = "10.0.0.0/16"
-maestro_image = "public.ecr.aws/h4u2q3r3/maestro:1.4.1"
+owner                   = "owner-name"
+region                  = "us-east-1"
+environment             = "staging"
+vpc_cidr_block          = "10.4.0.0/16"
+maestro_image           = "public.ecr.aws/h4u2q3r3/maestro:1.5.0"
+peering     = {
+    accepter_vpc_id = "vpc-id"
+    private_route_tables_id = []
+    public_route_tables_id = []
+}
 projects = [
     {
-        name = "project1"
-        code_provider = "GITHUB"
-        repository_url = "https://github.com/veezor/foo"
-        repository_branch = "staging"
+        project_name        = "project1"
+        code_provider       = "GITHUB"
+        task_processes      = "web{1024;2048}:1-2"
+        repository_url      = "https://github.com/veezor/foo"
+        repository_branch   = "production"
+        databases           = []
+        redis               = []
+        elasticsearch       = []
     },
     {
-        name = "project2"
-        code_provider = "GITHUB"
-        repository_url = "https://github.com/veezor/bar"
-        repository_branch = "main"
+        name              = "project2"
+        code_provider     = "GITHUB"
+        task_processes    = "web{512;1024}:1-2"
+        repository_url    = "https://github.com/veezor/bar"
+        repository_branch = "staging"
+        databases         = []
+        redis             = []
+        elasticsearch     = []
     }
 ]
 
