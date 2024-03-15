@@ -272,8 +272,6 @@ module "rds" {
   skip_final_snapshot       = each.value.skip_final_snapshot
   apply_immediately         = each.value.apply_immediately
   snapshot_identifier       = each.value.snapshot_identifier
-  engine_mode               = each.value.engine_mode
-  serverless                = each.value.serverless
 }
 
 module "elasticsearch" {

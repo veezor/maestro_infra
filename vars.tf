@@ -15,11 +15,6 @@ variable projects {
       skip_final_snapshot = bool
       apply_immediately = bool
       snapshot_identifier = string
-      engine_mode = string
-      serverless  = object({
-        max_capacity = number
-        min_capacity = number
-      })
     }))
     elasticsearch = list(object({
       name = string
