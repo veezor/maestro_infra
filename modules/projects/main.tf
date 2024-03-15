@@ -244,7 +244,7 @@ resource "aws_ecr_repository" "ecr_repository" {
 }
 
 resource "aws_ecs_cluster" "ecs_cluster" {
-  name = format("%s-%s-%s-cluster", "${var.owner}", "${var.project_name}", "${var.environment}")
+  name = format("%s-%s-%s", "${var.owner}", "${var.project_name}", "${var.environment}")
 
   setting {
     name  = "containerInsights"
@@ -272,6 +272,8 @@ module "rds" {
   skip_final_snapshot       = each.value.skip_final_snapshot
   apply_immediately         = each.value.apply_immediately
   snapshot_identifier       = each.value.snapshot_identifier
+  engine_mode               = each.value.engine_mode
+  serverless                = each.value.serverless
 }
 
 module "elasticsearch" {
@@ -303,4 +305,16 @@ module "redis" {
   subnet_ids            = var.aws_private_subnets
   sg_ids                = [aws_security_group.app.id, aws_security_group.codebuild.id]
   apply_immediately     = each.value.apply_immediately
+}
+
+module "eventbridge" {
+  source                    = "../../modules/eventbridge"
+  for_each = {for rule in var.eventbridge: rule.identifier => rule}
+
+  identifier            = each.value.identifier
+  project               = var.project_name
+  owner                 = var.owner
+  environment           = var.environment
+  schedule_expression   = each.value.schedule_expression
+  rule_name             = each.value.rule_name
 }

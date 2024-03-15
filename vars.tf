@@ -15,6 +15,11 @@ variable projects {
       skip_final_snapshot = bool
       apply_immediately = bool
       snapshot_identifier = string
+      engine_mode = string
+      serverless  = object({
+        max_capacity = number
+        min_capacity = number
+      })
     }))
     elasticsearch = list(object({
       name = string
@@ -36,6 +41,11 @@ variable projects {
       num_cache_nodes = number
       parameter_group = string 
       apply_immediately = bool
+    }))
+    eventbridge = list(object({
+      identifier = string
+      schedule_expression = list(string)
+      rule_name = list(string)
     }))
   }))
 }
