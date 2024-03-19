@@ -41,6 +41,7 @@ variable projects {
       identifier = string
       schedule_expression = list(string)
       rule_name = list(string)
+      target_arn = list(string)
     }))
   }))
 }

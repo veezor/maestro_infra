@@ -315,4 +315,5 @@ module "eventbridge" {
   environment           = var.environment
   schedule_expression   = each.value.schedule_expression
   rule_name             = each.value.rule_name
+  target_arn            = each.value.target_arn
 }

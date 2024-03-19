@@ -32,8 +32,9 @@ projects = [
         elasticsearch       = []
         eventbridge         = [{
             identifier = "adventure"
-            rule_name = ["good-morning", "good-night"]
-            schedule_expression = ["0 12 ? * MON-FRI *", "0 0 ? * MON-FRI *"]
+            rule_name = ["good-night"]
+            schedule_expression = ["0 0 ? * MON-FRI *"]
+            target_arn = ["arn:aws:lambda:us-east-1:${account_id}:function:test-lambda"]
     }]
     },
     {
