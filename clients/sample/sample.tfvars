@@ -26,6 +26,7 @@ projects = [
                 skip_final_snapshot = false
                 apply_immediately   = true
             }
+<<<<<<< HEAD
         ]
         s3                  = [
             {
@@ -38,6 +39,11 @@ projects = [
             }
         ]
         redis               = []
+=======
+        ]
+        redis               = []
+        s3                  = []
+>>>>>>> 7358edf47f877f74814b9dce5a204a687581164e
         elasticsearch       = []
     },
     {
@@ -47,8 +53,38 @@ projects = [
         repository_url      = "https://bitbucket.org/owner/frontend"
         repository_branch   = "staging"
         databases           = []
+<<<<<<< HEAD
         s3                  = []
         redis               = []
         elasticsearch       = []
     }
 ]
+=======
+        elasticsearch       = [
+            {
+                name = "frontend-site"
+                elasticsearch_version = "7.10"
+                cluster_config = {
+                    instance_type = "t3.small.elasticsearch"
+                    instance_count = 1
+                }
+                ebs_options = {
+                    ebs_enabled = true
+                    volume_size = 40
+                }
+        redis               = [
+            {
+                identifier          = "frontend-cluster"
+                engine              = "redis"
+                engine_version      = "7.0"
+                node_type           = "cache.t4g.micro"
+                num_cache_nodes     = 1
+                parameter_group     = "default.redis7"
+                apply_immediately   = true
+                prevent_destroy     = true
+            }
+        ]
+        s3                  = []
+    }]
+}]
+>>>>>>> 7358edf47f877f74814b9dce5a204a687581164e
