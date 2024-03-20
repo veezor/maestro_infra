@@ -30,6 +30,12 @@ projects = [
         ]
         redis               = []
         elasticsearch       = []
+        eventbridge         = [{
+            identifier = "adventure"
+            rule_name = ["good-night"]
+            schedule_expression = ["0 0 ? * MON-FRI *"]
+            target_arn = ["arn:aws:lambda:us-east-1:${account_id}:function:test-lambda"]
+    }]
     },
     {
         project_name        = "frontend"
@@ -64,5 +70,6 @@ projects = [
                 prevent_destroy     = true
             }
         ]
+        eventbridge         = []
     }
 ]

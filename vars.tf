@@ -37,6 +37,12 @@ variable projects {
       parameter_group = string 
       apply_immediately = bool
     }))
+    eventbridge = list(object({
+      identifier = string
+      schedule_expression = list(string)
+      rule_name = list(string)
+      target_arn = list(string)
+    }))
   }))
 }
 
